@@ -82,16 +82,16 @@ vols = kvk_data[kvk_data[work_program] == vols_program]
 # write to file
 with pd.ExcelWriter(vols_dir + vols_file) as writer:
     print(f'Writing {Color.GREEN}"{vols_sheet}"{Color.END} sheet to file: {Color.CYAN}"{vols_dir}{vols_file}"{Color.END}')
-    vols.to_excel(writer, sheet_name=vols_sheet)  # write YEAR VOLS sheet
+    vols.to_excel(writer, sheet_name=vols_sheet)  # write YEAR sheet to file
 
     for i in range(1, 5):
         # sorting VOLS to quarters
         vols_q = vols[(vols[work_prognoz_date] > quarters[f'{i}_begin']) & (vols[work_prognoz_date] <= quarters[f'{i}_end'])]
         print(f'Writing {Color.GREEN}"{vols_q_sheet_begin}{i}{vols_q_sheet_end}"{Color.END} sheet to file: {Color.CYAN}"{vols_dir}{vols_file}"{Color.END}')
-        vols_q.to_excel(writer, sheet_name=f'{vols_q_sheet_begin}{i}{vols_q_sheet_end}')
+        vols_q.to_excel(writer, sheet_name=f'{vols_q_sheet_begin}{i}{vols_q_sheet_end}')  # write quarters sheets to file
 
     for caucasian_region in regions:
         # sorting VOLS to regions
         vols_region = vols[vols[work_ro] == regions[caucasian_region]]
         print(f'Writing {Color.GREEN}"{caucasian_region}"{Color.END} sheet to file: {Color.CYAN}"{vols_dir}{vols_file}"{Color.END}')
-        vols_region.to_excel(writer, sheet_name=caucasian_region)
+        vols_region.to_excel(writer, sheet_name=caucasian_region)  # write region sheets to file
