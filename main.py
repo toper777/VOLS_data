@@ -3,6 +3,9 @@
 # import os for file operation
 # import os
 
+# import argparse for command-line arguments parser
+import argparse
+
 # import pandas for data operation
 import pandas as pd
 
@@ -70,6 +73,23 @@ quarters = {
     "4_begin": "2022-10-01",
     "4_end": "2022-12-31",
 }
+
+# command-line argument(s) parser
+def createParser():
+    parser = argparse.ArgumentParser(
+        prog='VOLS_data',
+        description='''Обработка данных по строительству ВОЛС''',
+        epilog='''(c) Tikhon Ostapenko 2021, 20222'''
+    )
+    subparsers = parser.add_subparsers(dest='command')
+
+    hello_parser = subparsers.add_parser('hello')
+    hello_parser.add_argument('--names', '-n', nargs='+', default=['мир'])
+
+    goodbye_parser = subparsers.add_parser('goodbye')
+    goodbye_parser.add_argument('-c', '--count', type=int, default=1)
+
+    return parser
 
 # read data from file
 print(f'Read data file: {Color.CYAN}"{data_dir}{data_file}"{Color.END}')
