@@ -13,10 +13,17 @@ program_name = "VOLS_data"
 program_version = "0.0.4"
 
 # main variables
-today_date = date.today().strftime("%Y%m%d")
+today_date = date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
+caucasian_region = ""
+
+# global variable
 data_dir = "y:/Блок №3/2022 год/"
 data_file = "!!!SQL Блок№3!!!  2022.xlsm"
 data_sheet = "Массив"
+
+# GDC file data
+gdc_dir = ""
+gdc_file = ""
 
 # vols_dir = "c:/tmp/"
 vols_dir = "y:/Блок №3/2022 год/"
@@ -31,8 +38,6 @@ work_program = "BP_ESUP"
 work_ro = "RO"
 work_prognoz_date = "PROGNOZ_DATE"
 work_index = "ID_ESUP"
-
-caucasian_region = ""
 
 
 # Colors for print
@@ -82,22 +87,22 @@ quarters = {
 
 # command-line argument(s) parser
 def create_parser():
-    parser = argparse.ArgumentParser(
+    local_parser = argparse.ArgumentParser(
         prog=program_name,
         description='''Обработка данных по строительству ВОЛС''',
         epilog=f'{program_name} {program_version} (c) Tikhon Ostapenko 2021, 20222'
     )
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = local_parser.add_subparsers(dest='command')
 
-    hello_parser = subparsers.add_parser('sql')
-    hello_parser.add_argument('--sql-directory', '-s', default=[data_dir])
-    hello_parser.add_argument('--sql-file', '-n', default=[data_file])
+    sql_parser = subparsers.add_parser('sql')
+    sql_parser.add_argument('--sql-directory', '-s', default=[data_dir])
+    sql_parser.add_argument('--sql-file', '-n', default=[data_file])
 
-#    goodbye_parser = subparsers.add_parser('gdc')
-#    goodbye_parser.add_argument('--gdc-directory', '-g', default=[gdc_dir])
-#    goodbye_parser.add_argument('--gdc-file', '-g', default=[gdc_file])
+    gdc_parser = subparsers.add_parser('gdc')
+    gdc_parser.add_argument('--gdc-directory', '-g', default=[gdc_dir])
+    gdc_parser.add_argument('--gdc-file', '-g', default=[gdc_file])
 
-    return parser
+    return local_parser
 
 
 if __name__ == '__main__':
