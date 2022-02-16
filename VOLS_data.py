@@ -100,7 +100,7 @@ def create_parser():
 
     gdc_parser = subparsers.add_parser('gdc')
     gdc_parser.add_argument('--gdc-directory', '-g', default=[gdc_dir])
-    gdc_parser.add_argument('--gdc-file', '-g', default=[gdc_file])
+    gdc_parser.add_argument('--gdc-file', '-f', default=[gdc_file])
 
     return local_parser
 
