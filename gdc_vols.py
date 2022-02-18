@@ -95,12 +95,12 @@ def write_dataframe_to_file(write_frame, write_file_name, write_sheet):
         with pd.ExcelWriter(write_file_name, mode='a', if_sheet_exists="replace", datetime_format="DD.MM.YYYY",
                             engine='openpyxl') as writer:
             print(
-                f'Writing {Color.GREEN}"{write_sheet}"{Color.END} sheet to file: {Color.CYAN}"{write_file_name}"{Color.END}')
+                f'Write {Color.GREEN}"{write_sheet}"{Color.END} sheet to file: {Color.CYAN}"{write_file_name}"{Color.END}')
             write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
     else:
         with pd.ExcelWriter(write_file_name, mode='w', datetime_format="DD.MM.YYYY", engine='openpyxl') as writer:
             print(
-                f'Writing {Color.GREEN}"{write_sheet}"{Color.END} sheet to file: {Color.CYAN}"{write_file_name}"{Color.END}')
+                f'Write {Color.GREEN}"{write_sheet}"{Color.END} sheet to file: {Color.CYAN}"{write_file_name}"{Color.END}')
             write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
 
 
@@ -122,7 +122,7 @@ def format_table(format_frame, format_sheet, format_file_name, format_tables_nam
     tab.tableStyleInfo = style
     inner_wb[format_sheet].add_table(tab)
     print(
-        f'Writing FORMATTED {Color.GREEN}"{format_sheet}"{Color.END} sheet to file: {Color.CYAN}"{format_file_name}"{Color.END}')
+        f'Write formatted {Color.GREEN}"{format_sheet}"{Color.END} sheet to file: {Color.CYAN}"{format_file_name}"{Color.END}')
     inner_wb.save(format_file_name)
 
 
@@ -218,8 +218,8 @@ def sum_sort_month_events(sum_dataframe, sum_column, sum_month):
 
 if __name__ == '__main__':
     # program and version
-    program_name = "GDC_VOLS"
-    program_version = "0.2.14"
+    program_name = "gdc_vols"
+    program_version = "0.2.18"
 
     # Год анализа
     year = 2022
@@ -228,18 +228,18 @@ if __name__ == '__main__':
     process_month = 2
 
     # main variables
-    urls = {'Строительство гор.ВОЛС 2022': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_City",
-            'Реконструкция гор.ВОЛС 2022': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_City",
-            'Строительство зон.ВОЛС 2022': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_Zone",
-            'Реконструкция зон.ВОЛС 2022': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_Zone"
+    urls = {f'Строительство гор.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_City",
+            f'Реконструкция гор.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_City",
+            f'Строительство зон.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_Zone",
+            f'Реконструкция зон.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_Zone"
             }
 
     report_sheet = "Отчетная таблица"
 
-    excel_tables_names = {'Строительство гор.ВОЛС 2022': "Urban_VOLS_Build",
-                          'Реконструкция гор.ВОЛС 2022': "Urban_VOLS_Reconstruction",
-                          'Строительство зон.ВОЛС 2022': "Zone_VOLS_Build",
-                          'Реконструкция зон.ВОЛС 2022': "Zone_VOLS_Reconstruction"}
+    excel_tables_names = {f'Строительство гор.ВОЛС {year}': "Urban_VOLS_Build",
+                          f'Реконструкция гор.ВОЛС {year}': "Urban_VOLS_Reconstruction",
+                          f'Строительство зон.ВОЛС {year}': "Zone_VOLS_Build",
+                          f'Реконструкция зон.ВОЛС {year}': "Zone_VOLS_Reconstruction"}
     excel_cell_names = fill_cell_names()
 
     # Стиль таблицы Excel
@@ -250,14 +250,14 @@ if __name__ == '__main__':
     columns_digit = ['ID']
     # Наименование колонки для сортировки по возрастанию
     columns_for_sort = ['ID']
+    work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
-    vols_dir = 'y:\\Блок №4\\ВОЛС\\2022\\'
-    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС КФ 2022.xlsx'
+    vols_dir = f'y:\\Блок №4\\ВОЛС\\{year}\\'
+    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {year}.xlsx'
     file_name = f'{vols_dir}{vols_file}'
     id_branch = "Филиал"
-    work_branch = "Кавказский филиал"
-    last_days_of_month = {}
 
+    last_days_of_month = {}
     count = 0
     all_events = 0
     sort_events = 0
@@ -393,5 +393,5 @@ if __name__ == '__main__':
     for i in range (31, 40):
         ws[f'C{i}'] = ws['B23'].value - ws[f'B{i}'].value
     print(
-        f'Writing {Color.GREEN}"{report_sheet}"{Color.END} sheet to file: {Color.CYAN}"{file_name}"{Color.END}')
+        f'Write {Color.GREEN}"{report_sheet}"{Color.END} sheet to file: {Color.CYAN}"{file_name}"{Color.END}')
     wb.save(file_name)
