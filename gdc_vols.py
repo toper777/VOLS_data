@@ -225,7 +225,7 @@ if __name__ == '__main__':
     year = 2022
 
     # Месяц для анализа
-    process_month = 3
+    process_month = 2
 
     # main variables
     urls = {'Строительство гор.ВОЛС 2022': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_City",
@@ -309,7 +309,6 @@ if __name__ == '__main__':
                              'traffic_status2': 'Запуск трафика_Статус'
                              }
 
-
     # Получение исходных данных и запись форматированных данных
     for sheet, url in urls.items():
         data_frame = read_from_dashboard(url)
@@ -322,15 +321,15 @@ if __name__ == '__main__':
         format_table(data_frame, sheet, file_name, excel_tables_names)
 
     # Создание отчёта
+    print(
+        f'Generate report sheet: {Color.GREEN}"{report_sheet}"{Color.END}')
     for i in range(1, 13):
         last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(year, i, 1)))
-
     wb = opxl.load_workbook(filename=file_name)
     try:
         ws = wb[report_sheet]
     except:
         ws = wb.create_sheet(title=report_sheet)
-
     ws['A1'] = "Строительство городских ВОЛС"
     ws['A2'] = 'Всего мероприятий'
     ws['A4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
@@ -378,24 +377,10 @@ if __name__ == '__main__':
     ws['B6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
     ws['C6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date'], process_columns_date['commissioning_date'], process_column_status['ks2_status'], process_column_status['commissioning_status'], ['Исполнена'], process_month)
     ws['D6'] = ws['C6'].value - ws['B6'].value
-    ws['B10'] = sum_sort_events(dashboard_data, process_column_status['tz_status'], ['Исполнена', 'Не требуется'])
-    ws['B11'] = sum_sort_events(dashboard_data, process_column_status['send_tz_status'], ['Исполнена', 'Не требуется'])
-    ws['B12'] = sum_sort_events(dashboard_data, process_column_status['received_tz_status'], ['Исполнена', 'Не требуется'])
-    ws['B13'] = sum_sort_events(dashboard_data, process_column_status['pir_smr_status'], ['Исполнена', 'Не требуется'])
-    ws['B14'] = sum_sort_events(dashboard_data, process_column_status['line_scheme_status'], ['Исполнена', 'Не требуется'])
-    ws['B15'] = sum_sort_events(dashboard_data, process_column_status['tu_status'], ['Исполнена', 'Не требуется'])
-    ws['B16'] = sum_sort_events(dashboard_data, process_column_status['build_status'], ['Исполнена', 'Не требуется'])
-    ws['B17'] = sum_sort_events(dashboard_data, process_column_status['ks2_status'], ['Исполнена', 'Не требуется'])
-    ws['B18'] = sum_sort_events(dashboard_data, process_column_status['commissioning_status'], ['Исполнена', 'Не требуется'])
-    ws['C10'] = ws['B2'].value - ws['B10'].value
-    ws['C11'] = ws['B2'].value - ws['B11'].value
-    ws['C12'] = ws['B2'].value - ws['B12'].value
-    ws['C13'] = ws['B2'].value - ws['B13'].value
-    ws['C14'] = ws['B2'].value - ws['B14'].value
-    ws['C15'] = ws['B2'].value - ws['B15'].value
-    ws['C16'] = ws['B2'].value - ws['B16'].value
-    ws['C17'] = ws['B2'].value - ws['B17'].value
-    ws['C18'] = ws['B2'].value - ws['B18'].value
+    for i, process in zip(range(10, 19), ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status', 'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
+        ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
+    for i in range (10, 19):
+        ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
 
     # Анализ реконструкции ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(urls.keys())[1])
@@ -403,26 +388,10 @@ if __name__ == '__main__':
     ws['B27'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
     ws['C27'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'], process_columns_date['commissioning_date2'], process_column_status['ks2_status2'], process_column_status['commissioning_status2'], ['Исполнена'], process_month)
     ws['D27'] = ws['C27'].value - ws['B27'].value
-    ws['B31'] = sum_sort_events(dashboard_data, process_column_status['tz_status2'], ['Исполнена', 'Не требуется'])
-    ws['B32'] = sum_sort_events(dashboard_data, process_column_status['send_tz_status2'], ['Исполнена', 'Не требуется'])
-    ws['B33'] = sum_sort_events(dashboard_data, process_column_status['received_tz_status2'], ['Исполнена', 'Не требуется'])
-    ws['B34'] = sum_sort_events(dashboard_data, process_column_status['pir_smr_status2'], ['Исполнена', 'Не требуется'])
-    ws['B35'] = sum_sort_events(dashboard_data, process_column_status['line_scheme_status2'], ['Исполнена', 'Не требуется'])
-    ws['B36'] = sum_sort_events(dashboard_data, process_column_status['tu_status2'], ['Исполнена', 'Не требуется'])
-    ws['B37'] = sum_sort_events(dashboard_data, process_column_status['build_status2'], ['Исполнена', 'Не требуется'])
-    ws['B38'] = sum_sort_events(dashboard_data, process_column_status['ks2_status2'], ['Исполнена', 'Не требуется'])
-    ws['B39'] = sum_sort_events(dashboard_data, process_column_status['commissioning_status2'], ['Исполнена', 'Не требуется'])
-    ws['C31'] = ws['B23'].value - ws['B31'].value
-    ws['C32'] = ws['B23'].value - ws['B32'].value
-    ws['C33'] = ws['B23'].value - ws['B33'].value
-    ws['C34'] = ws['B23'].value - ws['B34'].value
-    ws['C35'] = ws['B23'].value - ws['B35'].value
-    ws['C36'] = ws['B23'].value - ws['B36'].value
-    ws['C37'] = ws['B23'].value - ws['B37'].value
-    ws['C38'] = ws['B23'].value - ws['B38'].value
-    ws['C39'] = ws['B23'].value - ws['B39'].value
-
-
+    for i, process in zip(range(31, 40), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2', 'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2', 'commissioning_status2']):
+        ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
+    for i in range (31, 40):
+        ws[f'C{i}'] = ws['B23'].value - ws[f'B{i}'].value
     print(
         f'Writing {Color.GREEN}"{report_sheet}"{Color.END} sheet to file: {Color.CYAN}"{file_name}"{Color.END}')
     wb.save(file_name)
