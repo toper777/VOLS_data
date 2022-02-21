@@ -95,12 +95,12 @@ def write_dataframe_to_file(write_frame, write_file_name, write_sheet):
         with pd.ExcelWriter(write_file_name, mode='a', if_sheet_exists="replace", datetime_format="DD.MM.YYYY",
                             engine='openpyxl') as writer:
             print(
-                f'Write {Color.GREEN}"{write_sheet}"{Color.END} sheet to file: {Color.CYAN}"{write_file_name}"{Color.END}')
+                f'Append {Color.GREEN}"{write_sheet}"{Color.END} sheet to exist file: {Color.CYAN}"{write_file_name}"{Color.END}')
             write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
     else:
         with pd.ExcelWriter(write_file_name, mode='w', datetime_format="DD.MM.YYYY", engine='openpyxl') as writer:
             print(
-                f'Write {Color.GREEN}"{write_sheet}"{Color.END} sheet to file: {Color.CYAN}"{write_file_name}"{Color.END}')
+                f'Write {Color.GREEN}"{write_sheet}"{Color.END} sheet to new file: {Color.CYAN}"{write_file_name}"{Color.END}')
             write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
 
 
@@ -201,9 +201,7 @@ def sum_done_events(sum_dataframe, sum_ks_date, sum_commissioning_date, sum_ks_s
     sum_sort = 0
     sort_frame = sum_dataframe[[sum_ks_date, sum_commissioning_date, sum_ks_status, sum_commissioning_status]]
     for row in sort_frame.values:
-        # print_debug(3, row)
         if pd.Timestamp(row[0]) <= last_days_of_month[sum_month] and pd.Timestamp(row[1]) <= last_days_of_month[sum_month] and row[2] in sum_condition and row[3] in sum_condition:
-            # print_debug(4, row)
             sum_sort += 1
     return sum_sort
 
@@ -215,31 +213,48 @@ def sum_sort_month_events(sum_dataframe, sum_column, sum_month):
             sum_sort += 1
     return sum_sort
 
+def write_report_table_to_file(wreport_dataframe, wreport_file_name, wreport_sheet, wreport_excel_tables_names):
+    write_dataframe_to_file(wreport_dataframe, wreport_file_name, wreport_sheet)
+    format_table(wreport_dataframe, wreport_sheet, wreport_file_name, wreport_excel_tables_names)
+
 
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
     program_version = "0.2.18"
 
-    # Год анализа
-    year = 2022
+    # Год анализа. Если оставить 0, то берется текущий год
+    process_year = 2022
+    if process_year == 0:
+        process_year = datetime.date.today().year
 
-    # Месяц для анализа
+    # Месяц для анализа. Если оставить 0, то берется текущий месяц
     process_month = 2
+    if process_month == 0:
+        process_month = datetime.date.today().month
 
     # main variables
-    urls = {f'Строительство гор.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_City",
-            f'Реконструкция гор.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_City",
-            f'Строительство зон.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_Zone",
-            f'Реконструкция зон.ВОЛС {year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_Zone"
+    urls = {f'Строительство гор.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_City",
+            f'Реконструкция гор.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_City",
+            f'Строительство зон.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_Zone",
+            f'Реконструкция зон.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_Zone"
             }
 
-    report_sheet = "Отчетная таблица"
+    report_sheets = {'report': "Отчетная таблица",
+                     'tz': 'Не выпущены ТЗ',
+                     'sending_po': "Не переданы ТЗ в ПО",
+                     'received_po': 'Не приняты ТЗ в ПО'
+                     }
 
-    excel_tables_names = {f'Строительство гор.ВОЛС {year}': "Urban_VOLS_Build",
-                          f'Реконструкция гор.ВОЛС {year}': "Urban_VOLS_Reconstruction",
-                          f'Строительство зон.ВОЛС {year}': "Zone_VOLS_Build",
-                          f'Реконструкция зон.ВОЛС {year}': "Zone_VOLS_Reconstruction"}
+    excel_tables_names = {f'Строительство гор.ВОЛС {process_year}': "Urban_VOLS_Build",
+                          f'Реконструкция гор.ВОЛС {process_year}': "Urban_VOLS_Reconstruction",
+                          f'Строительство зон.ВОЛС {process_year}': "Zone_VOLS_Build",
+                          f'Реконструкция зон.ВОЛС {process_year}': "Zone_VOLS_Reconstruction",
+                          report_sheets['tz']: "tz_not_done",
+                          report_sheets['sending_po']: "sending_po_not_done",
+                          report_sheets['received_po']: "received_po_not_done",
+                          }
+
     excel_cell_names = fill_cell_names()
 
     # Стиль таблицы Excel
@@ -252,8 +267,8 @@ if __name__ == '__main__':
     columns_for_sort = ['ID']
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
-    vols_dir = f'y:\\Блок №4\\ВОЛС\\{year}\\'
-    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {year}.xlsx'
+    vols_dir = f'y:\\Блок №4\\ВОЛС\\{process_year}\\'
+    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {process_year}.xlsx'
     file_name = f'{vols_dir}{vols_file}'
     id_branch = "Филиал"
 
@@ -306,7 +321,8 @@ if __name__ == '__main__':
                              'commissioning_status': 'Приемка в эксплуатацию_статус',
                              'commissioning_status2': 'Приемка ВОЛС в эксплуатацию_Статус',
                              'traffic_status': 'Запуск трафика_статус',
-                             'traffic_status2': 'Запуск трафика_Статус'
+                             'traffic_status2': 'Запуск трафика_Статус',
+                             'region': 'Регион/Зона мероприятия'
                              }
 
     # Получение исходных данных и запись форматированных данных
@@ -322,14 +338,14 @@ if __name__ == '__main__':
 
     # Создание отчёта
     print(
-        f'Generate report sheet: {Color.GREEN}"{report_sheet}"{Color.END}')
+        f'Generate report sheet: {Color.GREEN}"{report_sheets["report"]}"{Color.END}')
     for i in range(1, 13):
-        last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(year, i, 1)))
+        last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
     wb = opxl.load_workbook(filename=file_name)
     try:
-        ws = wb[report_sheet]
+        ws = wb[report_sheets['report']]
     except:
-        ws = wb.create_sheet(title=report_sheet)
+        ws = wb.create_sheet(title=report_sheets['report'])
     ws['A1'] = "Строительство городских ВОЛС"
     ws['A2'] = 'Всего мероприятий'
     ws['A4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
@@ -347,33 +363,38 @@ if __name__ == '__main__':
     ws['A18'] = 'Приёмка ВОЛС в эксплуатацию'
     ws['B9'] = 'Выполнено'
     ws['C9'] = 'Осталось'
-    ws['A22'] = "Реконструкция городских ВОЛС"
-    ws['A23'] = 'Всего мероприятий'
-    ws['A25'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
-    ws['A27'] = 'Учтенных ВОЛС в KPI'
-    ws['A29'] = 'Исполнение мероприятий в ЕСУП'
-    ws['A30'] = 'Наименование мероприятия'
-    ws['A31'] = 'Выпущены ТЗ'
-    ws['A32'] = 'Переданы ТЗ в ПО'
-    ws['A33'] = 'Приняты ТЗ ПО'
-    ws['A34'] = 'Подписание договора на ПИР/ПИР+СМР'
-    ws['A35'] = 'Линейная схема'
-    ws['A36'] = 'Получено ТУ'
-    ws['A37'] = 'Строительство трассы'
-    ws['A38'] = 'Подготовка актов КС-2,3'
-    ws['A39'] = 'Приёмка ВОЛС в эксплуатацию'
-    ws['B30'] = 'Выполнено'
-    ws['C30'] = 'Осталось'
-    ws['B5'] = f'План, {datetime.datetime(year, process_month, 1).strftime("%b %Y")}'
-    ws['C5'] = f'Факт, {datetime.datetime(year, process_month, 1).strftime("%b %Y")}'
-    ws['D5'] = f'{chr(0x0394)}, {datetime.datetime(year, process_month, 1).strftime("%b %Y")}'
-    ws['B26'] = f'План, {datetime.datetime(year, process_month, 1).strftime("%b %Y")}'
-    ws['C26'] = f'Факт, {datetime.datetime(year, process_month, 1).strftime("%b %Y")}'
-    ws['D26'] = f'{chr(0x0394)}, {datetime.datetime(year, process_month, 1).strftime("%b %Y")}'
+    ws['F1'] = "Реконструкция городских ВОЛС"
+    ws['F2'] = 'Всего мероприятий'
+    ws['F4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
+    ws['F6'] = 'Учтенных ВОЛС в KPI'
+    ws['F8'] = 'Исполнение мероприятий в ЕСУП'
+    ws['F9'] = 'Наименование мероприятия'
+    ws['F10'] = 'Выпущены ТЗ'
+    ws['F11'] = 'Переданы ТЗ в ПО'
+    ws['F12'] = 'Приняты ТЗ ПО'
+    ws['F13'] = 'Подписание договора на ПИР/ПИР+СМР'
+    ws['F14'] = 'Линейная схема'
+    ws['F15'] = 'Получено ТУ'
+    ws['F16'] = 'Строительство трассы'
+    ws['F17'] = 'Подготовка актов КС-2,3'
+    ws['F18'] = 'Приёмка ВОЛС в эксплуатацию'
+    ws['G9'] = 'Выполнено'
+    ws['H9'] = 'Осталось'
+    ws['B5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['C5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['D5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['G5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['H5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['I5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
 
     # Анализ строительства ВОЛС
-    dashboard_data = pd.read_excel(file_name, sheet_name=list(urls.keys())[0])
-    ws['B2'] = sum_all_events(dashboard_data, process_columns_date['plan_date'])
+    dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[0])
+
+    tz_build_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status']] != 'Исполнена']
+    sending_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status']] != 'Исполнена']
+    received_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['received_tz_status']] != 'Исполнена']
+
+    ws['B2'] = len(dashboard_data[process_columns_date['plan_date']])
     ws['B6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
     ws['C6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date'], process_columns_date['commissioning_date'], process_column_status['ks2_status'], process_column_status['commissioning_status'], ['Исполнена'], process_month)
     ws['D6'] = ws['C6'].value - ws['B6'].value
@@ -383,15 +404,29 @@ if __name__ == '__main__':
         ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
 
     # Анализ реконструкции ВОЛС
-    dashboard_data = pd.read_excel(file_name, sheet_name=list(urls.keys())[1])
-    ws['B23'] = sum_all_events(dashboard_data, process_columns_date['plan_date'])
-    ws['B27'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
-    ws['C27'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'], process_columns_date['commissioning_date2'], process_column_status['ks2_status2'], process_column_status['commissioning_status2'], ['Исполнена'], process_month)
-    ws['D27'] = ws['C27'].value - ws['B27'].value
-    for i, process in zip(range(31, 40), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2', 'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2', 'commissioning_status2']):
-        ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
-    for i in range (31, 40):
-        ws[f'C{i}'] = ws['B23'].value - ws[f'B{i}'].value
+    dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[1])
+    tz_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status2']] != 'Исполнена']
+    sending_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status2']] != 'Исполнена']
+    received_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['received_tz_status2']] != 'Исполнена']
+
+    ws['G2'] = len(dashboard_data[process_columns_date['plan_date']])
+    ws['G6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
+    ws['H6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'], process_columns_date['commissioning_date2'], process_column_status['ks2_status2'], process_column_status['commissioning_status2'], ['Исполнена'], process_month)
+    ws['I6'] = ws['H6'].value - ws['G6'].value
+    for i, process in zip(range(10, 19), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2', 'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2', 'commissioning_status2']):
+        ws[f'G{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
+    for i in range (10, 19):
+        ws[f'H{i}'] = ws['G2'].value - ws[f'G{i}'].value
+
     print(
-        f'Write {Color.GREEN}"{report_sheet}"{Color.END} sheet to file: {Color.CYAN}"{file_name}"{Color.END}')
+        f'Write {Color.GREEN}"{report_sheets["report"]}"{Color.END} sheets to file: {Color.CYAN}"{file_name}"{Color.END}')
     wb.save(file_name)
+
+    tz_dataframe = pd.concat([tz_build_dataframe, tz_reconstruction_dataframe], ignore_index=True)
+    write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names)
+
+    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_reconstruction_dataframe], ignore_index=True)
+    write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names)
+
+    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_reconstruction_dataframe], ignore_index=True)
+    write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names)
