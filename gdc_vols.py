@@ -66,7 +66,7 @@ def read_from_dashboard(dashboard_url):
     :return DataFrame:
     """
     print(f'Read data from: {Color.BLUE}"{dashboard_url}"{Color.END}')
-    inner_dashboard_data = pd.read_json(url, convert_dates=('дата', 'Дата'))
+    inner_dashboard_data = pd.read_json(dashboard_url, convert_dates=('дата', 'Дата'))
     return inner_dashboard_data
 
 
@@ -182,13 +182,6 @@ def last_day_of_month(date):
     return date.replace(month=date.month + 1, day=1) - datetime.timedelta(days=1)
 
 
-def sum_all_events(sum_dataframe, sum_column):
-    sum_all = 0
-    for sum_data in sum_dataframe[sum_column]:
-        sum_all += 1
-    return sum_all
-
-
 def sum_sort_events(sum_dataframe, sum_column, sum_condition):
     sum_sort = 0
     for sum_data in sum_dataframe[sum_column]:
@@ -213,9 +206,15 @@ def sum_sort_month_events(sum_dataframe, sum_column, sum_month):
             sum_sort += 1
     return sum_sort
 
+
 def write_report_table_to_file(wreport_dataframe, wreport_file_name, wreport_sheet, wreport_excel_tables_names):
     write_dataframe_to_file(wreport_dataframe, wreport_file_name, wreport_sheet)
     format_table(wreport_dataframe, wreport_sheet, wreport_file_name, wreport_excel_tables_names)
+
+
+def change_head_names(change_data_frame):
+    # необходимо сделать изменение имен заголовков в единый формат
+    return change_data_frame
 
 
 if __name__ == '__main__':
@@ -234,16 +233,22 @@ if __name__ == '__main__':
         process_month = datetime.date.today().month
 
     # main variables
-    urls = {f'Строительство гор.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_City",
-            f'Реконструкция гор.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_City",
-            f'Строительство зон.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Build_Zone",
-            f'Реконструкция зон.ВОЛС {process_year}': "https://gdc-rts/api/test-table/vw_2022_FOCL_Common_Rebuild_Zone"
+    urls = {f'Строительство гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City',
+            f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_City',
+            f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
+            f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone'
             }
 
     report_sheets = {'report': "Отчетная таблица",
-                     'tz': 'Не выпущены ТЗ',
-                     'sending_po': "Не переданы ТЗ в ПО",
-                     'received_po': 'Не приняты ТЗ в ПО'
+                     'tz_build': 'Нет ТЗ Стр.',
+                     'tz_reconstruction': 'Нет ТЗ Рек.',
+                     'sending_po_build': "Нет передачи ТЗ Стр.",
+                     'sending_po_reconstruction': "Нет передачи ТЗ Рек.",
+                     'received_po_build': 'Не приняты ТЗ Стр.',
+                     'received_po_reconstruction': 'Не приняты ТЗ Рек.',
+                     'tz': 'Нет ТЗ',
+                     'sending_po': "Нет передачи ТЗ",
+                     'received_po': 'Не приняты ТЗ'
                      }
 
     excel_tables_names = {f'Строительство гор.ВОЛС {process_year}': "Urban_VOLS_Build",
@@ -330,6 +335,7 @@ if __name__ == '__main__':
         data_frame = read_from_dashboard(url)
         data_frame = sort_branch(data_frame, id_branch, work_branch)
         data_frame = data_frame.reset_index(drop=True)
+        # data_frame = change_head_names(data_frame)
         data_frame = convert_date(data_frame, columns_dates)
         data_frame = convert_int(data_frame, columns_digit)
         data_frame = sort_by_id(data_frame, columns_for_sort)
@@ -400,7 +406,7 @@ if __name__ == '__main__':
     ws['D6'] = ws['C6'].value - ws['B6'].value
     for i, process in zip(range(10, 19), ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status', 'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
         ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
-    for i in range (10, 19):
+    for i in range(10, 19):
         ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
 
     # Анализ реконструкции ВОЛС
@@ -415,18 +421,25 @@ if __name__ == '__main__':
     ws['I6'] = ws['H6'].value - ws['G6'].value
     for i, process in zip(range(10, 19), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2', 'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2', 'commissioning_status2']):
         ws[f'G{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
-    for i in range (10, 19):
+    for i in range(10, 19):
         ws[f'H{i}'] = ws['G2'].value - ws[f'G{i}'].value
 
     print(
         f'Write {Color.GREEN}"{report_sheets["report"]}"{Color.END} sheets to file: {Color.CYAN}"{file_name}"{Color.END}')
     wb.save(file_name)
 
-    tz_dataframe = pd.concat([tz_build_dataframe, tz_reconstruction_dataframe], ignore_index=True)
+    # Объединяем ТЗ стройки и реконструкции первые 5 полей
+    tz_dataframe = pd.concat([tz_build_dataframe.iloc[:, :4], tz_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names)
 
-    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_reconstruction_dataframe], ignore_index=True)
+    # Объединяем передачу ТЗ стройки и реконструкции первые 5 полей
+    sending_po_dataframe = pd.concat([sending_po_build_dataframe.iloc[:, :4], sending_po_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
+    # Убираем поля с не выданными ТЗ
+    sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
     write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names)
 
-    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_reconstruction_dataframe], ignore_index=True)
+    # Объединяем прием ТЗ стройки и реконструкции первые 5 полей
+    received_po_dataframe = pd.concat([received_po_build_dataframe.iloc[:, :4], received_po_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
+    # Убираем поля с не выданными ТЗ и не переданные в ПО
+    received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
     write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names)
