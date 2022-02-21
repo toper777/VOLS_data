@@ -2,6 +2,7 @@ from pathlib import Path
 import datetime
 import pandas as pd
 import openpyxl as opxl
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
@@ -34,16 +35,26 @@ class Color:
     """
     Содержит кодировки цветов для консольного вывода
     """
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END = '\033[0m'
+    # PURPLE = '\033[95m'
+    # CYAN = '\033[96m'
+    # DARKCYAN = '\033[36m'
+    # BLUE = '\033[94m'
+    # GREEN = '\033[92m'
+    # YELLOW = '\033[93m'
+    # RED = '\033[91m'
+    # BOLD = '\033[1m'
+    # UNDERLINE = '\033[4m'
+    # END = '\033[0m'
+    PURPLE = ''
+    CYAN = ''
+    DARKCYAN = ''
+    BLUE = ''
+    GREEN = ''
+    YELLOW = ''
+    RED = ''
+    BOLD = ''
+    UNDERLINE = ''
+    END = ''
 
 
 def print_debug(level, message):
@@ -220,7 +231,7 @@ def change_head_names(change_data_frame):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.2.18"
+    program_version = "0.3.1"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 2022
@@ -273,6 +284,7 @@ if __name__ == '__main__':
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     vols_dir = f'y:\\Блок №4\\ВОЛС\\{process_year}\\'
+#    vols_dir = f'.\\'
     vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {process_year}.xlsx'
     file_name = f'{vols_dir}{vols_file}'
     id_branch = "Филиал"
@@ -329,6 +341,8 @@ if __name__ == '__main__':
                              'traffic_status2': 'Запуск трафика_Статус',
                              'region': 'Регион/Зона мероприятия'
                              }
+
+    print(f'{program_name}: {program_version}')
 
     # Получение исходных данных и запись форматированных данных
     for sheet, url in urls.items():
@@ -423,6 +437,20 @@ if __name__ == '__main__':
         ws[f'G{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
     for i in range(10, 19):
         ws[f'H{i}'] = ws['G2'].value - ws[f'G{i}'].value
+
+    for col in ws.columns:
+        max_length = 0
+        column = get_column_letter(col[0].column)  # Get the column name
+        for cell in col:
+            if cell.coordinate in ws.merged_cells:  # not check merge_cells
+                continue
+            try:  # Necessary to avoid error on empty cells
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 0)
+        ws.column_dimensions[column].width = adjusted_width
 
     print(
         f'Write {Color.GREEN}"{report_sheets["report"]}"{Color.END} sheets to file: {Color.CYAN}"{file_name}"{Color.END}')
