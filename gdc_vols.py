@@ -382,16 +382,16 @@ if __name__ == '__main__':
 
     print(f'{program_name}: {program_version}')
 
-    # # Получение исходных данных и запись форматированных данных
-    # for sheet, url in urls.items():
-    #     data_frame = read_from_dashboard(url)
-    #     data_frame = sort_branch(data_frame, id_branch, work_branch)
-    #     data_frame = data_frame.reset_index(drop=True)
-    #     data_frame = convert_date(data_frame, columns_dates)
-    #     data_frame = convert_int(data_frame, columns_digit)
-    #     data_frame = sort_by_id(data_frame, columns_for_sort)
-    #     write_dataframe_to_file(data_frame, file_name, sheet)
-    #     format_table(data_frame, sheet, file_name, excel_tables_names)
+    # Получение исходных данных и запись форматированных данных
+    for sheet, url in urls.items():
+        data_frame = read_from_dashboard(url)
+        data_frame = sort_branch(data_frame, id_branch, work_branch)
+        data_frame = data_frame.reset_index(drop=True)
+        data_frame = convert_date(data_frame, columns_dates)
+        data_frame = convert_int(data_frame, columns_digit)
+        data_frame = sort_by_id(data_frame, columns_for_sort)
+        write_dataframe_to_file(data_frame, file_name, sheet)
+        format_table(data_frame, sheet, file_name, excel_tables_names)
 
     # Создание отчёта
     print(
