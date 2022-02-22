@@ -38,26 +38,16 @@ class Color:
     """
     Содержит кодировки цветов для консольного вывода
     """
-    # PURPLE = '\033[95m'
-    # CYAN = '\033[96m'
-    # DARKCYAN = '\033[36m'
-    # BLUE = '\033[94m'
-    # GREEN = '\033[92m'
-    # YELLOW = '\033[93m'
-    # RED = '\033[91m'
-    # BOLD = '\033[1m'
-    # UNDERLINE = '\033[4m'
-    # END = '\033[0m'
-    PURPLE = ''
-    CYAN = ''
-    DARKCYAN = ''
-    BLUE = ''
-    GREEN = ''
-    YELLOW = ''
-    RED = ''
-    BOLD = ''
-    UNDERLINE = ''
-    END = ''
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
 
 
 def print_debug(level, message):
@@ -79,7 +69,7 @@ def read_from_dashboard(dashboard_url):
     :param dashboard_url:
     :return DataFrame:
     """
-    print(f'Read data from: {Color.BLUE}"{dashboard_url}"{Color.END}')
+    print(f'Read data from: "{dashboard_url}"')
     inner_dashboard_data = pd.read_json(dashboard_url, convert_dates=('дата', 'Дата'))
     return inner_dashboard_data
 
@@ -109,12 +99,12 @@ def write_dataframe_to_file(write_frame, write_file_name, write_sheet):
         with pd.ExcelWriter(write_file_name, mode='a', if_sheet_exists="replace", datetime_format="DD.MM.YYYY",
                             engine='openpyxl') as writer:
             print(
-                f'Append {Color.GREEN}"{write_sheet}"{Color.END} sheet to exist file: {Color.CYAN}"{write_file_name}"{Color.END}')
+                f'Append "{write_sheet}" sheet to exist file: "{write_file_name}"')
             write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
     else:
         with pd.ExcelWriter(write_file_name, mode='w', datetime_format="DD.MM.YYYY", engine='openpyxl') as writer:
             print(
-                f'Write {Color.GREEN}"{write_sheet}"{Color.END} sheet to new file: {Color.CYAN}"{write_file_name}"{Color.END}')
+                f'Write "{write_sheet}" sheet to new file: "{write_file_name}"')
             write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
 
 
@@ -128,7 +118,7 @@ def format_table(format_frame, format_sheet, format_file_name, format_tables_nam
     :param format_tables_names:
     """
     print(
-        f'Read {Color.GREEN}"{format_sheet}"{Color.END} sheet from file: {Color.CYAN}"{format_file_name}"{Color.END}')
+        f'Read "{format_sheet}" sheet from file: "{format_file_name}"')
     inner_wb = openpyxl.load_workbook(filename=format_file_name)
     tab = Table(displayName=format_tables_names[format_sheet],
                 ref=f'A1:{excel_cell_names[len(format_frame.columns)]}{len(format_frame) + 1}')
@@ -141,7 +131,7 @@ def format_table(format_frame, format_sheet, format_file_name, format_tables_nam
         _ws = inner_wb.create_sheet(title=format_sheet)
     _ws = adjust_columns_width(_ws)
     print(
-        f'Write formatted {Color.GREEN}"{format_sheet}"{Color.END} sheet to file: {Color.CYAN}"{format_file_name}"{Color.END}')
+        f'Write formatted "{format_sheet}" sheet to file: "{format_file_name}"')
     inner_wb.save(format_file_name)
 
 
@@ -378,7 +368,8 @@ if __name__ == '__main__':
     fill_yellow = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
     fill_green = PatternFill(start_color='CCFFCC', end_color='CCFFCC', fill_type='solid')
     align_center = Alignment(horizontal="center")
-    border_medium = Border(left=Side(style=borders_style.BORDER_MEDIUM), right=Side(style=borders_style.BORDER_MEDIUM), top=Side(style=borders_style.BORDER_MEDIUM), bottom=Side(style=borders_style.BORDER_MEDIUM))
+    border_medium = Border(left=Side(style=borders_style.BORDER_MEDIUM), right=Side(style=borders_style.BORDER_MEDIUM),
+                           top=Side(style=borders_style.BORDER_MEDIUM), bottom=Side(style=borders_style.BORDER_MEDIUM))
 
     print(f'{program_name}: {program_version}')
 
@@ -395,7 +386,7 @@ if __name__ == '__main__':
 
     # Создание отчёта
     print(
-        f'Generate report sheet: {Color.GREEN}"{report_sheets["report"]}"{Color.END}')
+        f'Generate report sheet: "{report_sheets["report"]}"')
     for i in range(1, 13):
         last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
     wb = openpyxl.load_workbook(filename=file_name)
@@ -581,7 +572,7 @@ if __name__ == '__main__':
     ws = adjust_columns_width(ws)
 
     print(
-        f'Write {Color.GREEN}"{report_sheets["report"]}"{Color.END} sheets to file: {Color.CYAN}"{file_name}"{Color.END}')
+        f'Write "{report_sheets["report"]}" sheets to file: "{file_name}"')
     wb.save(file_name)
 
     # Создание листов для рассылки
