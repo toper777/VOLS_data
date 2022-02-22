@@ -3,7 +3,7 @@ import datetime
 import pandas as pd
 import openpyxl as opxl
 from openpyxl.formatting.rule import CellIsRule
-from openpyxl.styles import Font, Side, PatternFill
+from openpyxl.styles import Font, Side, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
@@ -134,6 +134,11 @@ def format_table(format_frame, format_sheet, format_file_name, format_tables_nam
     style = TableStyleInfo(name=table_style, showRowStripes=True, showColumnStripes=True)
     tab.tableStyleInfo = style
     inner_wb[format_sheet].add_table(tab)
+    try:
+        _ws = inner_wb[format_sheet]
+    except:
+        _ws = inner_wb.create_sheet(title=format_sheet)
+    _ws = adjust_columns_width(_ws)
     print(
         f'Write formatted {Color.GREEN}"{format_sheet}"{Color.END} sheet to file: {Color.CYAN}"{format_file_name}"{Color.END}')
     inner_wb.save(format_file_name)
@@ -230,10 +235,28 @@ def change_head_names(change_data_frame):
     return change_data_frame
 
 
+def adjust_columns_width(adjust_dataframe):
+    # Форматирование ширины полей отчётной таблицы
+    for _col in adjust_dataframe.columns:
+        _max_length = 0
+        _column = get_column_letter(_col[0].column)  # Get the column name
+        for _cell in _col:
+            if _cell.coordinate in adjust_dataframe.merged_cells:  # not check merge_cells
+                continue
+            try:  # Necessary to avoid error on empty cells
+                if len(str(_cell.value)) > _max_length:
+                    _max_length = len(str(_cell.value))
+            except:
+                pass
+        _adjusted_width = (_max_length + 2)
+        adjust_dataframe.column_dimensions[_column].width = _adjusted_width
+    return adjust_dataframe
+
+
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.1"
+    program_version = "0.3.3"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 2022
@@ -343,6 +366,17 @@ if __name__ == '__main__':
                              'traffic_status2': 'Запуск трафика_Статус',
                              'region': 'Регион/Зона мероприятия'
                              }
+    # Excel styles
+    fn_bold = Font(bold=True)
+    fn_red_bold = Font(color="FF0000", bold=True)
+    fn_red = Font(color="B22222")
+    fn_green = Font(color="006400")
+    fn_mag = Font(color="6633FF")
+    bd = Side(style='thick', color="000000")
+    fill_red = PatternFill(start_color='FFCCCC', end_color='FFCCCC', fill_type='solid')
+    fill_yellow = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+    fill_green = PatternFill(start_color='CCFFCC', end_color='CCFFCC', fill_type='solid')
+    align_center = Alignment(horizontal="center")
 
     print(f'{program_name}: {program_version}')
 
@@ -368,15 +402,7 @@ if __name__ == '__main__':
     except:
         ws = wb.create_sheet(title=report_sheets['report'])
 
-    # Styles
-    fn_bold = Font(bold=True)
-    fn_red_bold = Font(color="FF0000", bold=True)
-    fn_red = Font(color="FF3366")
-    fn_green = Font(color="33FF66")
-    fn_mag = Font(color="6633FF")
-    bd = Side(style='thick', color="000000")
-
-    ws['A1'].font = "Строительство городских ВОЛС"
+    ws['A1'] = "Строительство городских ВОЛС"
     ws['A1'].font = fn_red_bold
     ws['A2'] = 'Всего мероприятий'
     ws['A4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
@@ -397,8 +423,10 @@ if __name__ == '__main__':
     ws['A18'] = 'Приёмка ВОЛС в эксплуатацию'
     ws['B9'] = 'Выполнено'
     ws['B9'].font = fn_bold
+    ws['B9'].alignment = align_center
     ws['C9'] = 'Осталось'
     ws['C9'].font = fn_bold
+    ws['C9'].alignment = align_center
     ws['F1'] = "Реконструкция городских ВОЛС"
     ws['F1'].font = fn_red_bold
     ws['F2'] = 'Всего мероприятий'
@@ -420,20 +448,28 @@ if __name__ == '__main__':
     ws['F18'] = 'Приёмка ВОЛС в эксплуатацию'
     ws['G9'] = 'Выполнено'
     ws['G9'].font = fn_bold
+    ws['G9'].alignment = align_center
     ws['H9'] = 'Осталось'
     ws['H9'].font = fn_bold
+    ws['H9'].alignment = align_center
     ws['B5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['B5'].font = fn_bold
+    ws['B5'].alignment = align_center
     ws['C5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['C5'].font = fn_bold
+    ws['C5'].alignment = align_center
     ws['D5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['D5'].font = fn_bold
+    ws['D5'].alignment = align_center
     ws['G5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['G5'].font = fn_bold
+    ws['G5'].alignment = align_center
     ws['H5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['H5'].font = fn_bold
+    ws['H5'].alignment = align_center
     ws['I5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['I5'].font = fn_bold
+    ws['I5'].alignment = align_center
 
     # Анализ строительства ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[0])
@@ -444,19 +480,25 @@ if __name__ == '__main__':
 
     ws['B2'] = len(dashboard_data[process_columns_date['plan_date']])
     ws['B2'].font = fn_bold
+    ws['B2'].alignment = align_center
     ws['B6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
+    ws['B6'].alignment = align_center
     ws['C6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date'], process_columns_date['commissioning_date'], process_column_status['ks2_status'], process_column_status['commissioning_status'], ['Исполнена'], process_month)
+    ws['C6'].alignment = align_center
     ws['D6'] = ws['C6'].value - ws['B6'].value
-    ws.conditional_formatting.add('D6', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red))
-    ws.conditional_formatting.add('D6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green))
-    ws.conditional_formatting.add('D6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag))
+    ws['D6'].alignment = align_center
+    ws.conditional_formatting.add('D6', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+    ws.conditional_formatting.add('D6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+    ws.conditional_formatting.add('D6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
     for i, process in zip(range(10, 19), ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status', 'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
         ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
+        ws[f'B{i}'].alignment = align_center
     for i in range(10, 19):
         ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
-        ws.conditional_formatting.add(f'C{i}',  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green))
+        ws[f'C{i}'].alignment = align_center
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
 
     # Анализ реконструкции ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[1])
@@ -466,34 +508,26 @@ if __name__ == '__main__':
 
     ws['G2'] = len(dashboard_data[process_columns_date['plan_date']])
     ws['G2'].font = fn_bold
+    ws['G2'].alignment = align_center
     ws['G6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
+    ws['G6'].alignment = align_center
     ws['H6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'], process_columns_date['commissioning_date2'], process_column_status['ks2_status2'], process_column_status['commissioning_status2'], ['Исполнена'], process_month)
+    ws['H6'].alignment = align_center
     ws['I6'] = ws['H6'].value - ws['G6'].value
-    ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag))
+    ws['I6'].alignment = align_center
+    ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+    ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
     for i, process in zip(range(10, 19), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2', 'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2', 'commissioning_status2']):
         ws[f'G{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
+        ws[f'G{i}'].alignment = align_center
     for i in range(10, 19):
         ws[f'H{i}'] = ws['G2'].value - ws[f'G{i}'].value
-        ws.conditional_formatting.add(f'H{i}',  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red))
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green))
-
-    # Форматирование ширины полей отчётной таблицы
-    for col in ws.columns:
-        max_length = 0
-        column = get_column_letter(col[0].column)  # Get the column name
-        for cell in col:
-            if cell.coordinate in ws.merged_cells:  # not check merge_cells
-                continue
-            try:  # Necessary to avoid error on empty cells
-                if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
-            except:
-                pass
-        adjusted_width = (max_length + 1)
-        ws.column_dimensions[column].width = adjusted_width
+        ws[f'H{i}'].alignment = align_center
+        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+    ws = adjust_columns_width(ws)
 
     print(
         f'Write {Color.GREEN}"{report_sheets["report"]}"{Color.END} sheets to file: {Color.CYAN}"{file_name}"{Color.END}')
