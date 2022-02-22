@@ -15,22 +15,22 @@ def fill_cell_names():
 
     :return Dictionary:
     """
-    inner_count = 1
-    cell_names = {}
+    _count = 1
+    _cell_names = {}
 
-    for inner_i in range(65, 91):
-        cell_names[inner_count] = chr(inner_i)
-        inner_count += 1
-    for inner_i in range(65, 91):
-        for j in range(65, 91):
-            cell_names[inner_count] = chr(inner_i) + chr(j)
-            inner_count += 1
-    for inner_i in range(65, 91):
-        for j in range(65, 91):
-            for k in range(65, 91):
-                cell_names[inner_count] = chr(inner_i) + chr(j) + chr(k)
-                inner_count += 1
-    return cell_names
+    for _i in range(65, 91):
+        _cell_names[_count] = chr(_i)
+        _count += 1
+    for _i in range(65, 91):
+        for _j in range(65, 91):
+            _cell_names[_count] = chr(_i) + chr(_j)
+            _count += 1
+    for _i in range(65, 91):
+        for _j in range(65, 91):
+            for _k in range(65, 91):
+                _cell_names[_count] = chr(_i) + chr(_j) + chr(_k)
+                _count += 1
+    return _cell_names
 
 
 # Colors for print
@@ -62,168 +62,163 @@ def print_debug(level, message):
     print(f'{Color.RED}DEBUG ({level}): \n{Color.END}{Color.YELLOW}{message}{Color.END}')
 
 
-def read_from_dashboard(dashboard_url):
+def read_from_dashboard(_url):
     """
     Читает данные JSON из url и сохраняет их в DataFrame
 
-    :param dashboard_url:
+    :param _url:
     :return DataFrame:
     """
-    print(f'Read data from: "{dashboard_url}"')
-    inner_dashboard_data = pd.read_json(dashboard_url, convert_dates=('дата', 'Дата'))
-    return inner_dashboard_data
+    print(f'Read data from: "{_url}"')
+    _dashboard_data = pd.read_json(_url, convert_dates=('дата', 'Дата'))
+    return _dashboard_data
 
 
-def sort_branch(data_frame_sort, id_sort, branch_sort):
+def sort_branch(_data_frame, _id, _branch):
     """
     Сортирует DataFrame и возвращает DataFrame с данными только по заданному филиала
 
-    :param data_frame_sort:
-    :param id_sort:
-    :param branch_sort:
+    :param _data_frame:
+    :param _id:
+    :param _branch:
     :return DataFrame:
     """
-    data_frame_sort = data_frame_sort[data_frame_sort[id_sort] == branch_sort]
-    return data_frame_sort
+    _data_frame = _data_frame[_data_frame[_id] == _branch]
+    return _data_frame
 
 
-def write_dataframe_to_file(write_frame, write_file_name, write_sheet):
+def write_dataframe_to_file(_data_frame, _file_name, _sheet):
     """
     Записывает в Excel файл таблицы с данными
 
-    :param write_frame:
-    :param write_file_name:
-    :param write_sheet:
+    :param _data_frame:
+    :param _file_name:
+    :param _sheet:
     """
-    if Path(write_file_name).is_file():
-        with pd.ExcelWriter(write_file_name, mode='a', if_sheet_exists="replace", datetime_format="DD.MM.YYYY",
+    if Path(_file_name).is_file():
+        with pd.ExcelWriter(_file_name, mode='a', if_sheet_exists="replace", datetime_format="DD.MM.YYYY",
                             engine='openpyxl') as writer:
             print(
-                f'Append "{write_sheet}" sheet to exist file: "{write_file_name}"')
-            write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
+                f'Append "{_sheet}" sheet to exist file: "{_file_name}"')
+            _data_frame.to_excel(writer, sheet_name=_sheet, index=False)
     else:
-        with pd.ExcelWriter(write_file_name, mode='w', datetime_format="DD.MM.YYYY", engine='openpyxl') as writer:
+        with pd.ExcelWriter(_file_name, mode='w', datetime_format="DD.MM.YYYY", engine='openpyxl') as writer:
             print(
-                f'Write "{write_sheet}" sheet to new file: "{write_file_name}"')
-            write_frame.to_excel(writer, sheet_name=write_sheet, index=False)
+                f'Write "{_sheet}" sheet to new file: "{_file_name}"')
+            _data_frame.to_excel(writer, sheet_name=_sheet, index=False)
 
 
-def format_table(format_frame, format_sheet, format_file_name, format_tables_names):
+def format_table(_data_frame, _sheet, _file_name, _tables_names):
     """
     Форматирует таблицы для Excel файла и перезаписывает в файл в виде именованных Таблиц
 
-    :param format_frame:
-    :param format_sheet:
-    :param format_file_name:
-    :param format_tables_names:
+    :param _data_frame:
+    :param _sheet:
+    :param _file_name:
+    :param _tables_names:
     """
     print(
-        f'Read "{format_sheet}" sheet from file: "{format_file_name}"')
-    inner_wb = openpyxl.load_workbook(filename=format_file_name)
-    tab = Table(displayName=format_tables_names[format_sheet],
-                ref=f'A1:{excel_cell_names[len(format_frame.columns)]}{len(format_frame) + 1}')
+        f'Read "{_sheet}" sheet from file: "{_file_name}"')
+    _wb = openpyxl.load_workbook(filename=_file_name)
+    tab = Table(displayName=_tables_names[_sheet],
+                ref=f'A1:{excel_cell_names[len(_data_frame.columns)]}{len(_data_frame) + 1}')
     style = TableStyleInfo(name=table_style, showRowStripes=True, showColumnStripes=True)
     tab.tableStyleInfo = style
-    inner_wb[format_sheet].add_table(tab)
+    _wb[_sheet].add_table(tab)
     try:
-        _ws = inner_wb[format_sheet]
+        _ws = _wb[_sheet]
     except:
-        _ws = inner_wb.create_sheet(title=format_sheet)
+        _ws = _wb.create_sheet(title=_sheet)
     _ws = adjust_columns_width(_ws)
     print(
-        f'Write formatted "{format_sheet}" sheet to file: "{format_file_name}"')
-    inner_wb.save(format_file_name)
+        f'Write formatted "{_sheet}" sheet to file: "{_file_name}"')
+    _wb.save(_file_name)
 
 
-def convert_date(convert_frame, convert_columns):
+def convert_date(_data_frame, _columns):
     """
     Конвертирует поля с датами в формат datetime64.
     Возвращает конвертированный DataFrame
 
-    :param convert_frame:
-    :param convert_columns:
+    :param _data_frame:
+    :param _columns:
     :return DataFrame:
     """
-    columns_names = convert_frame.columns
-    for column_name in columns_names:
-        for column in convert_columns:
-            if column.lower() in column_name.lower():
-                convert_frame[column_name] = pd.to_datetime(convert_frame[column_name], dayfirst=True, format="%d.%m.%Y")
+    _columns_names = _data_frame.columns
+    for _column_name in _columns_names:
+        for _column in _columns:
+            if _column.lower() in _column_name.lower():
+                _data_frame[_column_name] = pd.to_datetime(_data_frame[_column_name], dayfirst=True, format="%d.%m.%Y")
             else:
                 pass
-    return convert_frame
+    return _data_frame
 
 
-def convert_int(convert_frame, convert_columns):
+def convert_int(_data_frame, _columns):
     """
     Конвертирует поля с целыми в формат int32.
     Возвращает конвертированный DataFrame
 
-    :param convert_frame:
-    :param convert_columns:
+    :param _data_frame:
+    :param _columns:
     :return DataFrame:
     """
-    columns_names = list(convert_frame)
-    for column_name in columns_names:
-        for column in convert_columns:
-            if column.lower() in column_name.lower():
-                convert_frame = convert_frame.astype({column_name: 'int32'})
+    _columns_names = list(_data_frame)
+    for _column_name in _columns_names:
+        for _column in _columns:
+            if _column.lower() in _column_name.lower():
+                _data_frame = _data_frame.astype({_column_name: 'int32'})
             else:
                 pass
-    return convert_frame
+    return _data_frame
 
 
-def sort_by_id(data_frame_sort, id_sort):
+def sort_by_id(_data_frame, _id):
     """
     Сортирует DataFrame и возвращает DataFrame с данными отсортированными по возрастанию
 
-    :param data_frame_sort:
-    :param id_sort:
+    :param _data_frame:
+    :param _id:
     :return DataFrame:
     """
-    data_frame_sort = data_frame_sort.sort_values(by=id_sort)
-    return data_frame_sort
+    _data_frame = _data_frame.sort_values(by=_id)
+    return _data_frame
 
 
-def last_day_of_month(date):
-    if date.month == 12:
-        return date.replace(day=31)
-    return date.replace(month=date.month + 1, day=1) - datetime.timedelta(days=1)
+def last_day_of_month(_date):
+    if _date.month == 12:
+        return _date.replace(day=31)
+    return _date.replace(month=_date.month + 1, day=1) - datetime.timedelta(days=1)
 
 
-def sum_sort_events(sum_dataframe, sum_column, sum_condition):
-    sum_sort = 0
-    for sum_data in sum_dataframe[sum_column]:
-        if sum_data in sum_condition:
-            sum_sort += 1
-    return sum_sort
+def sum_sort_events(_data_frame, _column, _condition):
+    _sum_sort = 0
+    for _sum_data in _data_frame[_column]:
+        if _sum_data in _condition:
+            _sum_sort += 1
+    return _sum_sort
 
 
-def sum_done_events(sum_dataframe, sum_ks_date, sum_commissioning_date, sum_ks_status, sum_commissioning_status, sum_condition, sum_month):
-    sum_sort = 0
-    sort_frame = sum_dataframe[[sum_ks_date, sum_commissioning_date, sum_ks_status, sum_commissioning_status]]
-    for row in sort_frame.values:
-        if pd.Timestamp(row[0]) <= last_days_of_month[sum_month] and pd.Timestamp(row[1]) <= last_days_of_month[sum_month] and row[2] in sum_condition and row[3] in sum_condition:
-            sum_sort += 1
-    return sum_sort
+def sum_done_events(_data_frame, _ks_date, _commissioning_date, _ks_status, _commissioning_status, _condition, _month):
+    _sum_sort = 0
+    _sort_frame = _data_frame[[_ks_date, _commissioning_date, _ks_status, _commissioning_status]]
+    for _row in _sort_frame.values:
+        if pd.Timestamp(_row[0]) <= last_days_of_month[_month] and pd.Timestamp(_row[1]) <= last_days_of_month[_month] and _row[2] in _condition and _row[3] in _condition:
+            _sum_sort += 1
+    return _sum_sort
 
 
-def sum_sort_month_events(sum_dataframe, sum_column, sum_month):
-    sum_sort = 0
-    for sum_data in sum_dataframe[sum_column]:
-        if pd.Timestamp(sum_data) <= last_days_of_month[sum_month]:
-            sum_sort += 1
-    return sum_sort
+def sum_sort_month_events(_data_frame, _column, _month):
+    _sum_sort = 0
+    for _sum_data in _data_frame[_column]:
+        if pd.Timestamp(_sum_data) <= last_days_of_month[_month]:
+            _sum_sort += 1
+    return _sum_sort
 
 
-def write_report_table_to_file(wreport_dataframe, wreport_file_name, wreport_sheet, wreport_excel_tables_names):
-    write_dataframe_to_file(wreport_dataframe, wreport_file_name, wreport_sheet)
-    format_table(wreport_dataframe, wreport_sheet, wreport_file_name, wreport_excel_tables_names)
-
-
-def change_head_names(change_data_frame):
-    # необходимо сделать изменение имен заголовков в единый формат
-    return change_data_frame
+def write_report_table_to_file(_data_frame, _file_name, _sheet, _excel_tables_names):
+    write_dataframe_to_file(_data_frame, _file_name, _sheet)
+    format_table(_data_frame, _sheet, _file_name, _excel_tables_names)
 
 
 def adjust_columns_width(_dataframe):
