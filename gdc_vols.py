@@ -3,7 +3,8 @@ import datetime
 import pandas as pd
 import openpyxl as opxl
 from openpyxl.formatting.rule import CellIsRule
-from openpyxl.styles import Font, Side, PatternFill, Alignment
+from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
+import openpyxl.styles.borders as borders_style
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
@@ -235,13 +236,13 @@ def change_head_names(change_data_frame):
     return change_data_frame
 
 
-def adjust_columns_width(adjust_dataframe):
+def adjust_columns_width(_dataframe):
     # Форматирование ширины полей отчётной таблицы
-    for _col in adjust_dataframe.columns:
+    for _col in _dataframe.columns:
         _max_length = 0
         _column = get_column_letter(_col[0].column)  # Get the column name
         for _cell in _col:
-            if _cell.coordinate in adjust_dataframe.merged_cells:  # not check merge_cells
+            if _cell.coordinate in _dataframe.merged_cells:  # not check merge_cells
                 continue
             try:  # Necessary to avoid error on empty cells
                 if len(str(_cell.value)) > _max_length:
@@ -249,8 +250,8 @@ def adjust_columns_width(adjust_dataframe):
             except:
                 pass
         _adjusted_width = (_max_length + 2)
-        adjust_dataframe.column_dimensions[_column].width = _adjusted_width
-    return adjust_dataframe
+        _dataframe.column_dimensions[_column].width = _adjusted_width
+    return _dataframe
 
 
 if __name__ == '__main__':
@@ -377,19 +378,20 @@ if __name__ == '__main__':
     fill_yellow = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
     fill_green = PatternFill(start_color='CCFFCC', end_color='CCFFCC', fill_type='solid')
     align_center = Alignment(horizontal="center")
+    border_medium = Border(left=Side(style=borders_style.BORDER_MEDIUM), right=Side(style=borders_style.BORDER_MEDIUM), top=Side(style=borders_style.BORDER_MEDIUM), bottom=Side(style=borders_style.BORDER_MEDIUM))
 
     print(f'{program_name}: {program_version}')
 
-    # Получение исходных данных и запись форматированных данных
-    for sheet, url in urls.items():
-        data_frame = read_from_dashboard(url)
-        data_frame = sort_branch(data_frame, id_branch, work_branch)
-        data_frame = data_frame.reset_index(drop=True)
-        data_frame = convert_date(data_frame, columns_dates)
-        data_frame = convert_int(data_frame, columns_digit)
-        data_frame = sort_by_id(data_frame, columns_for_sort)
-        write_dataframe_to_file(data_frame, file_name, sheet)
-        format_table(data_frame, sheet, file_name, excel_tables_names)
+    # # Получение исходных данных и запись форматированных данных
+    # for sheet, url in urls.items():
+    #     data_frame = read_from_dashboard(url)
+    #     data_frame = sort_branch(data_frame, id_branch, work_branch)
+    #     data_frame = data_frame.reset_index(drop=True)
+    #     data_frame = convert_date(data_frame, columns_dates)
+    #     data_frame = convert_int(data_frame, columns_digit)
+    #     data_frame = sort_by_id(data_frame, columns_for_sort)
+    #     write_dataframe_to_file(data_frame, file_name, sheet)
+    #     format_table(data_frame, sheet, file_name, excel_tables_names)
 
     # Создание отчёта
     print(
@@ -405,71 +407,106 @@ if __name__ == '__main__':
     ws['A1'] = "Строительство городских ВОЛС"
     ws['A1'].font = fn_red_bold
     ws['A2'] = 'Всего мероприятий'
+    ws['A2'].border = border_medium
     ws['A4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
     ws['A4'].font = fn_red_bold
     ws['A6'] = 'Учтенных ВОЛС в KPI'
+    ws['A6'].border = border_medium
     ws['A8'] = 'Исполнение мероприятий в ЕСУП'
     ws['A8'].font = fn_red_bold
     ws['A9'] = 'Наименование мероприятия'
     ws['A9'].font = fn_bold
+    ws['A9'].border = border_medium
     ws['A10'] = 'Выпущены ТЗ'
+    ws['A10'].border = border_medium
     ws['A11'] = 'Переданы ТЗ в ПО'
+    ws['A11'].border = border_medium
     ws['A12'] = 'Приняты ТЗ ПО'
+    ws['A12'].border = border_medium
     ws['A13'] = 'Подписание договора на ПИР/ПИР+СМР'
+    ws['A13'].border = border_medium
     ws['A14'] = 'Линейная схема'
+    ws['A14'].border = border_medium
     ws['A15'] = 'Получено ТУ'
+    ws['A15'].border = border_medium
     ws['A16'] = 'Строительство трассы'
+    ws['A16'].border = border_medium
     ws['A17'] = 'Подготовка актов КС-2,3'
+    ws['A17'].border = border_medium
     ws['A18'] = 'Приёмка ВОЛС в эксплуатацию'
+    ws['A18'].border = border_medium
     ws['B9'] = 'Выполнено'
     ws['B9'].font = fn_bold
     ws['B9'].alignment = align_center
+    ws['B9'].border = border_medium
     ws['C9'] = 'Осталось'
     ws['C9'].font = fn_bold
     ws['C9'].alignment = align_center
+    ws['C9'].border = border_medium
     ws['F1'] = "Реконструкция городских ВОЛС"
     ws['F1'].font = fn_red_bold
     ws['F2'] = 'Всего мероприятий'
+    ws['F2'].border = border_medium
+    ws['F2'].border = border_medium
     ws['F4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
     ws['F4'].font = fn_red_bold
     ws['F6'] = 'Учтенных ВОЛС в KPI'
+    ws['F6'].border = border_medium
     ws['F8'] = 'Исполнение мероприятий в ЕСУП'
     ws['F8'].font = fn_red_bold
     ws['F9'] = 'Наименование мероприятия'
     ws['F9'].font = fn_bold
+    ws['F9'].border = border_medium
     ws['F10'] = 'Выпущены ТЗ'
+    ws['F10'].border = border_medium
     ws['F11'] = 'Переданы ТЗ в ПО'
+    ws['F11'].border = border_medium
     ws['F12'] = 'Приняты ТЗ ПО'
+    ws['F12'].border = border_medium
     ws['F13'] = 'Подписание договора на ПИР/ПИР+СМР'
+    ws['F13'].border = border_medium
     ws['F14'] = 'Линейная схема'
+    ws['F14'].border = border_medium
     ws['F15'] = 'Получено ТУ'
+    ws['F15'].border = border_medium
     ws['F16'] = 'Строительство трассы'
+    ws['F16'].border = border_medium
     ws['F17'] = 'Подготовка актов КС-2,3'
+    ws['F17'].border = border_medium
     ws['F18'] = 'Приёмка ВОЛС в эксплуатацию'
+    ws['F18'].border = border_medium
     ws['G9'] = 'Выполнено'
     ws['G9'].font = fn_bold
     ws['G9'].alignment = align_center
+    ws['G9'].border = border_medium
     ws['H9'] = 'Осталось'
     ws['H9'].font = fn_bold
     ws['H9'].alignment = align_center
+    ws['H9'].border = border_medium
     ws['B5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['B5'].font = fn_bold
     ws['B5'].alignment = align_center
+    ws['B5'].border = border_medium
     ws['C5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['C5'].font = fn_bold
     ws['C5'].alignment = align_center
+    ws['C5'].border = border_medium
     ws['D5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['D5'].font = fn_bold
     ws['D5'].alignment = align_center
+    ws['D5'].border = border_medium
     ws['G5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['G5'].font = fn_bold
     ws['G5'].alignment = align_center
+    ws['G5'].border = border_medium
     ws['H5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['H5'].font = fn_bold
     ws['H5'].alignment = align_center
+    ws['H5'].border = border_medium
     ws['I5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
     ws['I5'].font = fn_bold
     ws['I5'].alignment = align_center
+    ws['I5'].border = border_medium
 
     # Анализ строительства ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[0])
@@ -481,12 +518,16 @@ if __name__ == '__main__':
     ws['B2'] = len(dashboard_data[process_columns_date['plan_date']])
     ws['B2'].font = fn_bold
     ws['B2'].alignment = align_center
+    ws['B2'].border = border_medium
     ws['B6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
     ws['B6'].alignment = align_center
+    ws['B6'].border = border_medium
     ws['C6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date'], process_columns_date['commissioning_date'], process_column_status['ks2_status'], process_column_status['commissioning_status'], ['Исполнена'], process_month)
     ws['C6'].alignment = align_center
+    ws['C6'].border = border_medium
     ws['D6'] = ws['C6'].value - ws['B6'].value
     ws['D6'].alignment = align_center
+    ws['D6'].border = border_medium
     ws.conditional_formatting.add('D6', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
     ws.conditional_formatting.add('D6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
     ws.conditional_formatting.add('D6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
@@ -494,9 +535,11 @@ if __name__ == '__main__':
     for i, process in zip(range(10, 19), ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status', 'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
         ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
         ws[f'B{i}'].alignment = align_center
+        ws[f'B{i}'].border = border_medium
     for i in range(10, 19):
         ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
         ws[f'C{i}'].alignment = align_center
+        ws[f'C{i}'].border = border_medium
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
 
@@ -509,12 +552,16 @@ if __name__ == '__main__':
     ws['G2'] = len(dashboard_data[process_columns_date['plan_date']])
     ws['G2'].font = fn_bold
     ws['G2'].alignment = align_center
+    ws['G2'].border = border_medium
     ws['G6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
     ws['G6'].alignment = align_center
+    ws['G6'].border = border_medium
     ws['H6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'], process_columns_date['commissioning_date2'], process_column_status['ks2_status2'], process_column_status['commissioning_status2'], ['Исполнена'], process_month)
     ws['H6'].alignment = align_center
+    ws['H6'].border = border_medium
     ws['I6'] = ws['H6'].value - ws['G6'].value
     ws['I6'].alignment = align_center
+    ws['I6'].border = border_medium
     ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
     ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
     ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
@@ -522,9 +569,11 @@ if __name__ == '__main__':
     for i, process in zip(range(10, 19), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2', 'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2', 'commissioning_status2']):
         ws[f'G{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
         ws[f'G{i}'].alignment = align_center
+        ws[f'G{i}'].border = border_medium
     for i in range(10, 19):
         ws[f'H{i}'] = ws['G2'].value - ws[f'G{i}'].value
         ws[f'H{i}'].alignment = align_center
+        ws[f'H{i}'].border = border_medium
         ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
         ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
     ws = adjust_columns_width(ws)
