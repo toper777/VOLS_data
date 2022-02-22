@@ -1,7 +1,7 @@
 from pathlib import Path
 import datetime
 import pandas as pd
-import openpyxl as opxl
+import openpyxl as openpyxl
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 import openpyxl.styles.borders as borders_style
@@ -129,7 +129,7 @@ def format_table(format_frame, format_sheet, format_file_name, format_tables_nam
     """
     print(
         f'Read {Color.GREEN}"{format_sheet}"{Color.END} sheet from file: {Color.CYAN}"{format_file_name}"{Color.END}')
-    inner_wb = opxl.load_workbook(filename=format_file_name)
+    inner_wb = openpyxl.load_workbook(filename=format_file_name)
     tab = Table(displayName=format_tables_names[format_sheet],
                 ref=f'A1:{excel_cell_names[len(format_frame.columns)]}{len(format_frame) + 1}')
     style = TableStyleInfo(name=table_style, showRowStripes=True, showColumnStripes=True)
@@ -398,7 +398,7 @@ if __name__ == '__main__':
         f'Generate report sheet: {Color.GREEN}"{report_sheets["report"]}"{Color.END}')
     for i in range(1, 13):
         last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
-    wb = opxl.load_workbook(filename=file_name)
+    wb = openpyxl.load_workbook(filename=file_name)
     try:
         ws = wb[report_sheets['report']]
     except:
@@ -537,7 +537,8 @@ if __name__ == '__main__':
         ws[f'B{i}'].alignment = align_center
         ws[f'B{i}'].border = border_medium
     for i in range(10, 19):
-        ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
+        # ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
+        ws[f'C{i}'] = f'=B2-B{i}'
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
@@ -570,8 +571,9 @@ if __name__ == '__main__':
         ws[f'G{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
         ws[f'G{i}'].alignment = align_center
         ws[f'G{i}'].border = border_medium
+        ws[f'G{i}'].border = border_medium
     for i in range(10, 19):
-        ws[f'H{i}'] = ws['G2'].value - ws[f'G{i}'].value
+        ws[f'H{i}'] = f'=G2-G{i}'
         ws[f'H{i}'].alignment = align_center
         ws[f'H{i}'].border = border_medium
         ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
