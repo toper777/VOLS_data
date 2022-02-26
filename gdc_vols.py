@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 import datetime
 import pandas as pd
@@ -70,7 +71,11 @@ def read_from_dashboard(_url):
     :return DataFrame:
     """
     print(f'Read data from: "{_url}"')
-    _dashboard_data = pd.read_json(_url, convert_dates=('дата', 'Дата'))
+    try:
+        _dashboard_data = pd.read_json(_url, convert_dates=('дата', 'Дата'))
+    except Exception:
+        print(f"ERROR: can't read data from url {_url}")
+        sys.exit(1)
     return _dashboard_data
 
 
@@ -127,7 +132,7 @@ def format_table(_data_frame, _sheet, _file_name, _tables_names):
     _wb[_sheet].add_table(tab)
     try:
         _ws = _wb[_sheet]
-    except:
+    except Exception:
         _ws = _wb.create_sheet(title=_sheet)
     _ws = adjust_columns_width(_ws)
     print(
@@ -232,7 +237,7 @@ def adjust_columns_width(_dataframe):
             try:  # Necessary to avoid error on empty cells
                 if len(str(_cell.value)) > _max_length:
                     _max_length = len(str(_cell.value))
-            except:
+            except Exception:
                 pass
         _adjusted_width = (_max_length + 2)
         _dataframe.column_dimensions[_column].width = _adjusted_width
@@ -255,11 +260,12 @@ if __name__ == '__main__':
         process_month = datetime.date.today().month
 
     # main variables
-    urls = {f'Строительство гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City',
-            f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_City',
-            f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
-            f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone'
-            }
+    urls = {
+        f'Строительство гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City',
+        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_City',
+        f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone'
+        }
 
     report_sheets = {'report': "Отчетная таблица",
                      'tz_build': 'Нет ТЗ Стр.',
@@ -295,7 +301,7 @@ if __name__ == '__main__':
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     vols_dir = f'y:\\Блок №4\\ВОЛС\\{process_year}\\'
-#    vols_dir = f'.\\'
+    #    vols_dir = f'.\\'
     vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {process_year}.xlsx'
     file_name = f'{vols_dir}{vols_file}'
     id_branch = "Филиал"
@@ -387,7 +393,7 @@ if __name__ == '__main__':
     wb = openpyxl.load_workbook(filename=file_name)
     try:
         ws = wb[report_sheets['report']]
-    except:
+    except Exception:
         ws = wb.create_sheet(title=report_sheets['report'])
 
     ws['A1'] = "Строительство городских ВОЛС"
@@ -499,7 +505,8 @@ if __name__ == '__main__':
 
     tz_build_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status']] != 'Исполнена']
-    received_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['received_tz_status']] != 'Исполнена']
+    received_po_build_dataframe = dashboard_data[
+        dashboard_data[process_column_status['received_tz_status']] != 'Исполнена']
 
     ws['B2'] = len(dashboard_data[process_columns_date['plan_date']])
     ws['B2'].font = fn_bold
@@ -508,17 +515,25 @@ if __name__ == '__main__':
     ws['B6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
-    ws['C6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date'], process_columns_date['commissioning_date'], process_column_status['ks2_status'], process_column_status['commissioning_status'], ['Исполнена'], process_month)
+    ws['C6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date'],
+                               process_columns_date['commissioning_date'], process_column_status['ks2_status'],
+                               process_column_status['commissioning_status'], ['Исполнена'], process_month)
     ws['C6'].alignment = align_center
     ws['C6'].border = border_medium
     ws['D6'] = ws['C6'].value - ws['B6'].value
     ws['D6'].alignment = align_center
     ws['D6'].border = border_medium
-    ws.conditional_formatting.add('D6', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-    ws.conditional_formatting.add('D6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-    ws.conditional_formatting.add('D6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
+    ws.conditional_formatting.add('D6', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                   fill=fill_red))
+    ws.conditional_formatting.add('D6',
+                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
+                                             fill=fill_green))
+    ws.conditional_formatting.add('D6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
+                                                   fill=fill_yellow))
 
-    for i, process in zip(range(10, 19), ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status', 'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
+    for i, process in zip(range(10, 19),
+                          ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status',
+                           'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
         ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
         ws[f'B{i}'].alignment = align_center
         ws[f'B{i}'].border = border_medium
@@ -527,14 +542,19 @@ if __name__ == '__main__':
         ws[f'C{i}'] = f'=B2-B{i}'
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}',
+                                      CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                 fill=fill_red))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True,
+                                                          font=fn_green, fill=fill_green))
 
     # Анализ реконструкции ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[1])
     tz_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status2']] != 'Исполнена']
-    sending_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status2']] != 'Исполнена']
-    received_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['received_tz_status2']] != 'Исполнена']
+    sending_po_reconstruction_dataframe = dashboard_data[
+        dashboard_data[process_column_status['send_tz_status2']] != 'Исполнена']
+    received_po_reconstruction_dataframe = dashboard_data[
+        dashboard_data[process_column_status['received_tz_status2']] != 'Исполнена']
 
     ws['G2'] = len(dashboard_data[process_columns_date['plan_date']])
     ws['G2'].font = fn_bold
@@ -543,17 +563,26 @@ if __name__ == '__main__':
     ws['G6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
-    ws['H6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'], process_columns_date['commissioning_date2'], process_column_status['ks2_status2'], process_column_status['commissioning_status2'], ['Исполнена'], process_month)
+    ws['H6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'],
+                               process_columns_date['commissioning_date2'], process_column_status['ks2_status2'],
+                               process_column_status['commissioning_status2'], ['Исполнена'], process_month)
     ws['H6'].alignment = align_center
     ws['H6'].border = border_medium
     ws['I6'] = ws['H6'].value - ws['G6'].value
     ws['I6'].alignment = align_center
     ws['I6'].border = border_medium
-    ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
+    ws.conditional_formatting.add('I6',
+                                  CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red,
+                                             fill=fill_red))
+    ws.conditional_formatting.add('I6',
+                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
+                                             fill=fill_green))
+    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
+                                                   fill=fill_yellow))
 
-    for i, process in zip(range(10, 19), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2', 'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2', 'commissioning_status2']):
+    for i, process in zip(range(10, 19), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2',
+                                          'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2',
+                                          'commissioning_status2']):
         ws[f'G{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
         ws[f'G{i}'].alignment = align_center
         ws[f'G{i}'].border = border_medium
@@ -562,8 +591,11 @@ if __name__ == '__main__':
         ws[f'H{i}'] = f'=G2-G{i}'
         ws[f'H{i}'].alignment = align_center
         ws[f'H{i}'].border = border_medium
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'H{i}',
+                                      CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                 fill=fill_red))
+        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True,
+                                                          font=fn_green, fill=fill_green))
     ws = adjust_columns_width(ws)
 
     print(
@@ -573,17 +605,24 @@ if __name__ == '__main__':
     # Создание листов для рассылки
     #
     # Объединяем ТЗ стройки и реконструкции первые 5 полей
-    tz_dataframe = pd.concat([tz_build_dataframe.iloc[:, :4], tz_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
+    tz_dataframe = pd.concat([tz_build_dataframe.iloc[:, :4], tz_reconstruction_dataframe.iloc[:, :4]],
+                             ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names)
 
     # Объединяем передачу ТЗ стройки и реконструкции первые 5 полей
-    sending_po_dataframe = pd.concat([sending_po_build_dataframe.iloc[:, :4], sending_po_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
+    sending_po_dataframe = pd.concat(
+        [sending_po_build_dataframe.iloc[:, :4], sending_po_reconstruction_dataframe.iloc[:, :4]],
+        ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ
-    sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
+    sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(
+        keep=False).reset_index(drop=True)
     write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names)
 
     # Объединяем прием ТЗ стройки и реконструкции первые 5 полей
-    received_po_dataframe = pd.concat([received_po_build_dataframe.iloc[:, :4], received_po_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
+    received_po_dataframe = pd.concat(
+        [received_po_build_dataframe.iloc[:, :4], received_po_reconstruction_dataframe.iloc[:, :4]],
+        ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ и не переданные в ПО
-    received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
+    received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe],
+                                      ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
     write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names)
