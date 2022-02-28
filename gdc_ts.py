@@ -246,8 +246,8 @@ def adjust_columns_width(_dataframe):
 
 if __name__ == '__main__':
     # program and version
-    program_name = "gdc_vols"
-    program_version = "0.3.3"
+    program_name = "gdc_ts"
+    program_version = "0.4.2"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 2022
@@ -265,6 +265,7 @@ if __name__ == '__main__':
         f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
         f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone',
+        f'РРЛ {process_year}': f'https://gdc-rts/api/test-table/vw_RRL_Common%20where%20YEAR(TRY_CONVERT(date,%20[%D0%9F%D0%BB%D0%B0%D0%BD%D0%B8%D1%80%D1%83%D0%B5%D0%BC%D0%B0%D1%8F%20%D0%B4%D0%B0%D1%82%D0%B0%20%D0%BE%D0%BA%D0%BE%D0%BD%D1%87%D0%B0%D0%BD%D0%B8%D1%8F],%20104))%20=%202022'
         }
 
     report_sheets = {'report': "Отчетная таблица",
@@ -283,6 +284,8 @@ if __name__ == '__main__':
                           f'Реконструкция гор.ВОЛС {process_year}': "Urban_VOLS_Reconstruction",
                           f'Строительство зон.ВОЛС {process_year}': "Zone_VOLS_Build",
                           f'Реконструкция зон.ВОЛС {process_year}': "Zone_VOLS_Reconstruction",
+                          f'Стр. РРЛ {process_year}': "RRL_Build",
+                          f'Рек. РРЛ {process_year}': "RRL_Reconstruction",
                           report_sheets['tz']: "tz_not_done",
                           report_sheets['sending_po']: "sending_po_not_done",
                           report_sheets['received_po']: "received_po_not_done",
@@ -381,14 +384,31 @@ if __name__ == '__main__':
 
     # Получение исходных данных и запись форматированных данных
     for sheet, url in urls.items():
-        data_frame = read_from_dashboard(url)
-        data_frame = sort_branch(data_frame, id_branch, work_branch)
-        data_frame = data_frame.reset_index(drop=True)
-        data_frame = convert_date(data_frame, columns_dates)
-        data_frame = convert_int(data_frame, columns_digit)
-        data_frame = sort_by_id(data_frame, columns_for_sort)
-        write_dataframe_to_file(data_frame, file_name, sheet)
-        format_table(data_frame, sheet, file_name, excel_tables_names)
+        if sheet == f"РРЛ {process_year}":
+            data_frame = read_from_dashboard(url)
+            data_frame = sort_branch(data_frame, id_branch, work_branch)
+            data_frame = sort_branch(data_frame, id_esup, process_year)
+            data_frame = convert_date(data_frame, columns_dates)
+            data_frame = convert_int(data_frame, columns_digit)
+            data_frame = sort_by_id(data_frame, columns_for_sort)
+            data_frame_rrl_build = sort_branch(data_frame, bp_esup, rrl_build)
+            sheet = f'Стр. РРЛ {process_year}'
+            write_dataframe_to_file(data_frame_rrl_build, file_name, sheet)
+            format_table(data_frame_rrl_build, sheet, file_name, excel_tables_names)
+            data_frame_rrl_recon = sort_branch(data_frame, bp_esup, rrl_recon)
+            sheet = f'Рек. РРЛ {process_year}'
+            write_dataframe_to_file(data_frame_rrl_recon, file_name, sheet)
+            format_table(data_frame_rrl_recon, sheet, file_name, excel_tables_names)
+
+        else:
+            data_frame = read_from_dashboard(url)
+            data_frame = sort_branch(data_frame, id_branch, work_branch)
+            data_frame = data_frame.reset_index(drop=True)
+            data_frame = convert_date(data_frame, columns_dates)
+            data_frame = convert_int(data_frame, columns_digit)
+            data_frame = sort_by_id(data_frame, columns_for_sort)
+            write_dataframe_to_file(data_frame, file_name, sheet)
+            format_table(data_frame, sheet, file_name, excel_tables_names)
 
     # Создание отчёта
     print(
