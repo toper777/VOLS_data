@@ -304,10 +304,10 @@ if __name__ == '__main__':
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     # vols_dir = f'y:\\Блок №4\\ВОЛС\\{process_year}\\'
-    vols_dir = f'c:\\tmp\\'
+    ts_dir = f'c:\\tmp\\'
     # vols_dir = f'.\\'
-    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {process_year}.xlsx'
-    file_name = f'{vols_dir}{vols_file}'
+    ts_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС и РРЛ {"".join(symbol[0].upper() for symbol in work_branch.split())} {process_year}.xlsx'
+    file_name = f'{ts_dir}{ts_file}'
     id_branch = "Филиал"
     id_esup = "План ЕСУП"
     bp_esup = "БП ЕСУП"
@@ -399,7 +399,6 @@ if __name__ == '__main__':
             sheet = f'Рек. РРЛ {process_year}'
             write_dataframe_to_file(data_frame_rrl_recon, file_name, sheet)
             format_table(data_frame_rrl_recon, sheet, file_name, excel_tables_names)
-
         else:
             data_frame = read_from_dashboard(url)
             data_frame = sort_branch(data_frame, id_branch, work_branch)

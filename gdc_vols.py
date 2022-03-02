@@ -247,7 +247,7 @@ def adjust_columns_width(_dataframe):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.3"
+    program_version = "0.3.5"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 2022
@@ -255,7 +255,7 @@ if __name__ == '__main__':
         process_year = datetime.date.today().year
 
     # Месяц для анализа. Если оставить 0, то берется текущий месяц
-    process_month = 2
+    process_month = 0
     if process_month == 0:
         process_month = datetime.date.today().month
 
@@ -300,16 +300,12 @@ if __name__ == '__main__':
     columns_for_sort = ['ID']
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
-    # vols_dir = f'y:\\Блок №4\\ВОЛС\\{process_year}\\'
-    vols_dir = f'c:\\tmp\\'
+    vols_dir = f'y:\\Блок №4\\ВОЛС\\{process_year}\\'
     # vols_dir = f'.\\'
-    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {process_year}.xlsx'
+    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}.xlsx'
     file_name = f'{vols_dir}{vols_file}'
     id_branch = "Филиал"
     id_esup = "План ЕСУП"
-    bp_esup = "БП ЕСУП"
-    rrl_build = "Строительство РРЛ"
-    rrl_recon = "Модернизация РРЛ"
 
     last_days_of_month = {}
     count = 0
@@ -480,27 +476,27 @@ if __name__ == '__main__':
     ws['H9'].font = fn_bold
     ws['H9'].alignment = align_center
     ws['H9'].border = border_medium
-    ws['B5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['B5'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['B5'].font = fn_bold
     ws['B5'].alignment = align_center
     ws['B5'].border = border_medium
-    ws['C5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['C5'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['C5'].font = fn_bold
     ws['C5'].alignment = align_center
     ws['C5'].border = border_medium
-    ws['D5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['D5'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['D5'].font = fn_bold
     ws['D5'].alignment = align_center
     ws['D5'].border = border_medium
-    ws['G5'] = f'План, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['G5'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['G5'].font = fn_bold
     ws['G5'].alignment = align_center
     ws['G5'].border = border_medium
-    ws['H5'] = f'Факт, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['H5'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['H5'].font = fn_bold
     ws['H5'].alignment = align_center
     ws['H5'].border = border_medium
-    ws['I5'] = f'{chr(0x0394)}, {datetime.datetime(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['I5'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['I5'].font = fn_bold
     ws['I5'].alignment = align_center
     ws['I5'].border = border_medium
