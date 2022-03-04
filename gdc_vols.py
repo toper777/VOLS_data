@@ -122,22 +122,25 @@ def format_table(_data_frame, _sheet, _file_name, _tables_names):
     :param _file_name:
     :param _tables_names:
     """
-    print(
-        f'Read "{_sheet}" sheet from file: "{_file_name}"')
-    _wb = openpyxl.load_workbook(filename=_file_name)
-    tab = Table(displayName=_tables_names[_sheet],
-                ref=f'A1:{excel_cell_names[len(_data_frame.columns)]}{len(_data_frame) + 1}')
-    style = TableStyleInfo(name=table_style, showRowStripes=True, showColumnStripes=True)
-    tab.tableStyleInfo = style
-    _wb[_sheet].add_table(tab)
-    try:
-        _ws = _wb[_sheet]
-    except Exception:
-        _ws = _wb.create_sheet(title=_sheet)
-    _ws = adjust_columns_width(_ws)
-    print(
-        f'Write formatted "{_sheet}" sheet to file: "{_file_name}"')
-    _wb.save(_file_name)
+    if not _data_frame.empty:
+        print(
+            f'Read "{_sheet}" sheet from file: "{_file_name}"')
+        _wb = openpyxl.load_workbook(filename=_file_name)
+        tab = Table(displayName=_tables_names[_sheet],
+                    ref=f'A1:{excel_cell_names[len(_data_frame.columns)]}{len(_data_frame) + 1}')
+        style = TableStyleInfo(name=table_style, showRowStripes=True, showColumnStripes=True)
+        tab.tableStyleInfo = style
+        _wb[_sheet].add_table(tab)
+        try:
+            _ws = _wb[_sheet]
+        except Exception:
+            _ws = _wb.create_sheet(title=_sheet)
+        _ws = adjust_columns_width(_ws)
+        print(
+            f'Write formatted "{_sheet}" sheet to file: "{_file_name}"')
+        _wb.save(_file_name)
+    else:
+        pass
 
 
 def convert_date(_data_frame, _columns):
@@ -208,7 +211,8 @@ def sum_done_events(_data_frame, _ks_date, _commissioning_date, _ks_status, _com
     _sum_sort = 0
     _sort_frame = _data_frame[[_ks_date, _commissioning_date, _ks_status, _commissioning_status]]
     for _row in _sort_frame.values:
-        if pd.Timestamp(_row[0]) <= last_days_of_month[_month] and pd.Timestamp(_row[1]) <= last_days_of_month[_month] and _row[2] in _condition and _row[3] in _condition:
+        if pd.Timestamp(_row[0]) <= last_days_of_month[_month] and pd.Timestamp(_row[1]) <= last_days_of_month[
+            _month] and _row[2] in _condition and _row[3] in _condition:
             _sum_sort += 1
     return _sum_sort
 
@@ -247,7 +251,7 @@ def adjust_columns_width(_dataframe):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.8"
+    program_version = "0.3.9"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 0
@@ -266,7 +270,7 @@ if __name__ == '__main__':
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
         f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone',
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211'
-        }
+    }
 
     report_sheets = {'report': "Отчетная таблица",
                      'tz_build': 'Нет ТЗ Стр.',
@@ -617,11 +621,11 @@ if __name__ == '__main__':
     #
     # Создание листа строительства месяца отчёта
     curr_month = (build_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
-    curr_status = (build_dashboard_data[process_column_status['commissioning_status']] != 'Исполнено') & (build_dashboard_data[process_column_status['ks2_status']] != 'Исполнено')
+    curr_status = (build_dashboard_data[process_column_status['commissioning_status']].str.contains('Исполнено|Не требуется', regex=True) == False) & (build_dashboard_data[process_column_status['ks2_status']].str.contains('Исполнено|Не требуется', regex=True) == False)
     current_month_build_dataframe = build_dashboard_data[curr_month & curr_status]
 
     curr_month = (reconstruction_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (reconstruction_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
-    curr_status = (reconstruction_dashboard_data[process_column_status['commissioning_status2']] != 'Исполнено') & (reconstruction_dashboard_data[process_column_status['ks2_status2']] != 'Исполнено')
+    curr_status = (reconstruction_dashboard_data[process_column_status['commissioning_status2']].str.contains('Исполнено|Не требуется', regex=True) == False) & (reconstruction_dashboard_data[process_column_status['ks2_status2']].str.contains('Исполнено|Не требуется', regex=True) == False)
     current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month & curr_status]
     current_month_dataframe = pd.concat([current_month_build_dataframe.iloc[:, :4], current_month_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names)
