@@ -247,7 +247,7 @@ def adjust_columns_width(_dataframe):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.5"
+    program_version = "0.3.7"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 2022
@@ -274,6 +274,7 @@ if __name__ == '__main__':
                      'sending_po_reconstruction': "Нет передачи ТЗ Рек.",
                      'received_po_build': 'Не приняты ТЗ Стр.',
                      'received_po_reconstruction': 'Не приняты ТЗ Рек.',
+                     'current_month': f'Строительство {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}',
                      'tz': 'Нет ТЗ',
                      'sending_po': "Нет передачи ТЗ",
                      'received_po': 'Не приняты ТЗ'
@@ -283,6 +284,7 @@ if __name__ == '__main__':
                           f'Реконструкция гор.ВОЛС {process_year}': "Urban_VOLS_Reconstruction",
                           f'Строительство зон.ВОЛС {process_year}': "Zone_VOLS_Build",
                           f'Реконструкция зон.ВОЛС {process_year}': "Zone_VOLS_Reconstruction",
+                          report_sheets['current_month']: "current_month",
                           report_sheets['tz']: "tz_not_done",
                           report_sheets['sending_po']: "sending_po_not_done",
                           report_sheets['received_po']: "received_po_not_done",
@@ -376,21 +378,26 @@ if __name__ == '__main__':
     print(f'{program_name}: {program_version}')
 
     # Получение исходных данных и запись форматированных данных
-    for sheet, url in urls.items():
-        data_frame = read_from_dashboard(url)
-        data_frame = sort_branch(data_frame, id_branch, work_branch)
-        data_frame = data_frame.reset_index(drop=True)
-        data_frame = convert_date(data_frame, columns_dates)
-        data_frame = convert_int(data_frame, columns_digit)
-        data_frame = sort_by_id(data_frame, columns_for_sort)
-        write_dataframe_to_file(data_frame, file_name, sheet)
-        format_table(data_frame, sheet, file_name, excel_tables_names)
+
+    # get_report - определяет получать ли внешние данные
+    get_report = True
+
+    if get_report:
+        for sheet, url in urls.items():
+            data_frame = read_from_dashboard(url)
+            data_frame = sort_branch(data_frame, id_branch, work_branch)
+            data_frame = data_frame.reset_index(drop=True)
+            data_frame = convert_date(data_frame, columns_dates)
+            data_frame = convert_int(data_frame, columns_digit)
+            data_frame = sort_by_id(data_frame, columns_for_sort)
+            write_dataframe_to_file(data_frame, file_name, sheet)
+            format_table(data_frame, sheet, file_name, excel_tables_names)
 
     # Создание отчёта
-    print(
-        f'Generate report sheet: "{report_sheets["report"]}"')
+    print(f'Generate report sheet: "{report_sheets["report"]}"')
     for i in range(1, 13):
         last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
+
     wb = openpyxl.load_workbook(filename=file_name)
     try:
         ws = wb[report_sheets['report']]
@@ -504,12 +511,13 @@ if __name__ == '__main__':
     # Анализ строительства ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[0])
 
+    build_dashboard_data = dashboard_data
     tz_build_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status']] != 'Исполнена']
     received_po_build_dataframe = dashboard_data[
         dashboard_data[process_column_status['received_tz_status']] != 'Исполнена']
 
-    ws['B2'] = len(dashboard_data[process_columns_date['plan_date']])
+    ws['B2'] = dashboard_data[process_columns_date['plan_date']].count()
     ws['B2'].font = fn_bold
     ws['B2'].alignment = align_center
     ws['B2'].border = border_medium
@@ -551,13 +559,14 @@ if __name__ == '__main__':
 
     # Анализ реконструкции ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[1])
+    reconstruction_dashboard_data = dashboard_data
     tz_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status2']] != 'Исполнена']
     sending_po_reconstruction_dataframe = dashboard_data[
         dashboard_data[process_column_status['send_tz_status2']] != 'Исполнена']
     received_po_reconstruction_dataframe = dashboard_data[
         dashboard_data[process_column_status['received_tz_status2']] != 'Исполнена']
 
-    ws['G2'] = len(dashboard_data[process_columns_date['plan_date']])
+    ws['G2'] = dashboard_data[process_columns_date['plan_date']].count()
     ws['G2'].font = fn_bold
     ws['G2'].alignment = align_center
     ws['G2'].border = border_medium
@@ -599,26 +608,39 @@ if __name__ == '__main__':
                                                           font=fn_green, fill=fill_green))
     ws = adjust_columns_width(ws)
 
-    print(
-        f'Write "{report_sheets["report"]}" sheets to file: "{file_name}"')
+    print(f'Write "{report_sheets["report"]}" sheets to file: "{file_name}"')
     wb.save(file_name)
 
     # Создание листов для рассылки
     #
+    # Создание листа строительства месяца отчёта
+    curr_month = (build_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month,1).strftime('%Y-%m-%d'))
+    curr_status = (build_dashboard_data[process_column_status['commissioning_status']] != 'Исполнено') & (build_dashboard_data[process_column_status['ks2_status']] != 'Исполнено')
+    current_month_build_dataframe = build_dashboard_data[curr_month & curr_status]
+
+    curr_month = (reconstruction_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (reconstruction_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month,1).strftime('%Y-%m-%d'))
+    curr_status = (reconstruction_dashboard_data[process_column_status['commissioning_status2']] != 'Исполнено') & (reconstruction_dashboard_data[process_column_status['ks2_status2']] != 'Исполнено')
+    current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month & curr_status]
+    current_month_dataframe = pd.concat([current_month_build_dataframe.iloc[:, :4], current_month_reconstruction_dataframe.iloc[:, :4]],
+                             ignore_index=True).reset_index(drop=True)
+    write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names)
+
     # Объединяем ТЗ стройки и реконструкции первые 5 полей
     tz_dataframe = pd.concat([tz_build_dataframe.iloc[:, :4], tz_reconstruction_dataframe.iloc[:, :4]],
                              ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names)
 
-    # Объединяем передачу ТЗ стройки и реконструкции первые 5 полей
+    # Создание листа Нет ТЗ
     sending_po_dataframe = pd.concat(
         [sending_po_build_dataframe.iloc[:, :4], sending_po_reconstruction_dataframe.iloc[:, :4]],
         ignore_index=True).reset_index(drop=True)
+    # Создание листа Не переданы ТЗ в ПО
     # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(
         keep=False).reset_index(drop=True)
     write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names)
 
+    # Создание листа ТЗ не принятов ПО
     # Объединяем прием ТЗ стройки и реконструкции первые 5 полей
     received_po_dataframe = pd.concat(
         [received_po_build_dataframe.iloc[:, :4], received_po_reconstruction_dataframe.iloc[:, :4]],
