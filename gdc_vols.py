@@ -211,8 +211,7 @@ def sum_done_events(_data_frame, _ks_date, _commissioning_date, _ks_status, _com
     _sum_sort = 0
     _sort_frame = _data_frame[[_ks_date, _commissioning_date, _ks_status, _commissioning_status]]
     for _row in _sort_frame.values:
-        if pd.Timestamp(_row[0]) <= last_days_of_month[_month] and pd.Timestamp(_row[1]) <= last_days_of_month[
-            _month] and _row[2] in _condition and _row[3] in _condition:
+        if pd.Timestamp(_row[0]) <= last_days_of_month[_month] and pd.Timestamp(_row[1]) <= last_days_of_month[_month] and _row[2] in _condition and _row[3] in _condition:
             _sum_sort += 1
     return _sum_sort
 
@@ -618,34 +617,43 @@ if __name__ == '__main__':
     wb.save(file_name)
 
     # Создание листов для рассылки
-    #
-    # Создание листа строительства месяца отчёта
-    curr_month = (build_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
-    curr_status = (build_dashboard_data[process_column_status['commissioning_status']].str.contains('Исполнено|Не требуется', regex=True) == False) & (build_dashboard_data[process_column_status['ks2_status']].str.contains('Исполнено|Не требуется', regex=True) == False)
-    current_month_build_dataframe = build_dashboard_data[curr_month & curr_status]
 
-    curr_month = (reconstruction_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (reconstruction_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
-    curr_status = (reconstruction_dashboard_data[process_column_status['commissioning_status2']].str.contains('Исполнено|Не требуется', regex=True) == False) & (reconstruction_dashboard_data[process_column_status['ks2_status2']].str.contains('Исполнено|Не требуется', regex=True) == False)
-    current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month & curr_status]
+    # Создание листа Активные мероприятия строительства месяца отчёта
+    # маска для текущего месяца
+    curr_month_bool_mask = (build_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
+    # маска для не "Исполнено" или не "Не требуется"
+    curr_status_bool_mask = (~build_dashboard_data[process_column_status['commissioning_status']].str.contains('Исполнено|Не требуется', regex=True)) & (~build_dashboard_data[process_column_status['ks2_status']].str.contains('Исполнено|Не требуется', regex=True))
+    # Выборка объектов реконструкции по маскам
+    current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
+
+    # маска для текущего месяца
+    curr_month_bool_mask = (reconstruction_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (reconstruction_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
+    # маска для не "Исполнено" или не "Не требуется"
+    curr_status_bool_mask = (~reconstruction_dashboard_data[process_column_status['commissioning_status2']].str.contains('Исполнено|Не требуется', regex=True)) & (~reconstruction_dashboard_data[process_column_status['ks2_status2']].str.contains('Исполнено|Не требуется', regex=True))
+    # Выборка объектов реконструкции по маскам
+    current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
+
+    # Объединяем стройку и реконструкцию первые 5 столбцов
     current_month_dataframe = pd.concat([current_month_build_dataframe.iloc[:, :4], current_month_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names)
 
-    # Объединяем ТЗ стройки и реконструкции первые 5 полей
+    # Создание листа Нет ТЗ
+    # Объединяем ТЗ стройки и реконструкции первые 5 столбцов
     tz_dataframe = pd.concat([tz_build_dataframe.iloc[:, :4], tz_reconstruction_dataframe.iloc[:, :4]],
                              ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names)
 
-    # Создание листа Нет ТЗ
     sending_po_dataframe = pd.concat(
         [sending_po_build_dataframe.iloc[:, :4], sending_po_reconstruction_dataframe.iloc[:, :4]],
         ignore_index=True).reset_index(drop=True)
+
     # Создание листа Не переданы ТЗ в ПО
     # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(
         keep=False).reset_index(drop=True)
     write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names)
 
-    # Создание листа ТЗ не принятов ПО
+    # Создание листа ТЗ не принято в ПО
     # Объединяем прием ТЗ стройки и реконструкции первые 5 полей
     received_po_dataframe = pd.concat(
         [received_po_build_dataframe.iloc[:, :4], received_po_reconstruction_dataframe.iloc[:, :4]],
