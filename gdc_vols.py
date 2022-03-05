@@ -1,3 +1,5 @@
+#  Copyright (c) 2022. Tikhon Ostapenko
+
 import sys
 from pathlib import Path
 import datetime
@@ -250,7 +252,7 @@ def adjust_columns_width(_dataframe):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.9"
+    program_version = "0.3.10"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 0
@@ -379,6 +381,8 @@ if __name__ == '__main__':
     align_center = Alignment(horizontal="center")
     border_medium = Border(left=Side(style=borders_style.BORDER_MEDIUM), right=Side(style=borders_style.BORDER_MEDIUM),
                            top=Side(style=borders_style.BORDER_MEDIUM), bottom=Side(style=borders_style.BORDER_MEDIUM))
+    border_thin = Border(left=Side(style=borders_style.BORDER_THIN), right=Side(style=borders_style.BORDER_THIN),
+                         top=Side(style=borders_style.BORDER_THIN), bottom=Side(style=borders_style.BORDER_THIN))
 
     print(f'{program_name}: {program_version}')
 
@@ -409,16 +413,20 @@ if __name__ == '__main__':
     except Exception:
         ws = wb.create_sheet(title=report_sheets['report'])
 
+    # Формирование статических полей отчёта
     ws['A1'] = "Строительство городских ВОЛС"
     ws['A1'].font = fn_red_bold
+    ws['A1'].border = border_thin
     ws['A2'] = 'Всего мероприятий'
     ws['A2'].border = border_medium
     ws['A4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
     ws['A4'].font = fn_red_bold
+    ws['A4'].border = border_thin
     ws['A6'] = 'Учтенных ВОЛС в KPI'
     ws['A6'].border = border_medium
     ws['A8'] = 'Исполнение мероприятий в ЕСУП'
     ws['A8'].font = fn_red_bold
+    ws['A8'].border = border_thin
     ws['A9'] = 'Наименование мероприятия'
     ws['A9'].font = fn_bold
     ws['A9'].border = border_medium
@@ -450,15 +458,18 @@ if __name__ == '__main__':
     ws['C9'].border = border_medium
     ws['F1'] = "Реконструкция городских ВОЛС"
     ws['F1'].font = fn_red_bold
+    ws['F1'].border = border_thin
     ws['F2'] = 'Всего мероприятий'
     ws['F2'].border = border_medium
     ws['F2'].border = border_medium
     ws['F4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
     ws['F4'].font = fn_red_bold
+    ws['F4'].border = border_thin
     ws['F6'] = 'Учтенных ВОЛС в KPI'
     ws['F6'].border = border_medium
     ws['F8'] = 'Исполнение мероприятий в ЕСУП'
     ws['F8'].font = fn_red_bold
+    ws['F8'].border = border_thin
     ws['F9'] = 'Наименование мероприятия'
     ws['F9'].font = fn_bold
     ws['F9'].border = border_medium
@@ -488,6 +499,8 @@ if __name__ == '__main__':
     ws['H9'].font = fn_bold
     ws['H9'].alignment = align_center
     ws['H9'].border = border_medium
+
+    # Формирование динамических полей отчёта
     ws['B5'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['B5'].font = fn_bold
     ws['B5'].alignment = align_center
@@ -514,7 +527,13 @@ if __name__ == '__main__':
     ws['I5'].border = border_medium
 
     # Анализ строительства ВОЛС
-    dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[0])
+
+    analyze_extended = True  # если True то использовать анализ по расширенному списку мероприятий
+
+    if analyze_extended:
+        dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[4])
+    else:
+        dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[0])
 
     build_dashboard_data = dashboard_data
     tz_build_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status']] != 'Исполнена']
