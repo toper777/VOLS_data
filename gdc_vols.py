@@ -252,7 +252,7 @@ def adjust_columns_width(_dataframe):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.10"
+    program_version = "0.3.11"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 0
@@ -452,7 +452,7 @@ if __name__ == '__main__':
     ws['B9'].font = fn_bold
     ws['B9'].alignment = align_center
     ws['B9'].border = border_medium
-    ws['C9'] = 'Осталось'
+    ws['C9'] = f'{chr(0x0394)}'
     ws['C9'].font = fn_bold
     ws['C9'].alignment = align_center
     ws['C9'].border = border_medium
@@ -495,7 +495,7 @@ if __name__ == '__main__':
     ws['G9'].font = fn_bold
     ws['G9'].alignment = align_center
     ws['G9'].border = border_medium
-    ws['H9'] = 'Осталось'
+    ws['H9'] = f'{chr(0x0394)}'
     ws['H9'].font = fn_bold
     ws['H9'].alignment = align_center
     ws['H9'].border = border_medium
@@ -571,15 +571,15 @@ if __name__ == '__main__':
         ws[f'B{i}'].alignment = align_center
         ws[f'B{i}'].border = border_medium
     for i in range(10, 19):
-        # ws[f'C{i}'] = ws['B2'].value - ws[f'B{i}'].value
-        ws[f'C{i}'] = f'=B2-B{i}'
+        ws[f'C{i}'] = ws[f'B{i}'].value - ws['B2'].value
+        # ws[f'C{i}'] = f'=B{i}-B2'
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
         ws.conditional_formatting.add(f'C{i}',
-                                      CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red,
-                                                 fill=fill_red))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True,
-                                                          font=fn_green, fill=fill_green))
+                                      CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green,
+                                                 fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True,
+                                                          font=fn_red, fill=fill_red))
 
     # Анализ реконструкции ВОЛС
     dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[1])
@@ -622,14 +622,15 @@ if __name__ == '__main__':
         ws[f'G{i}'].border = border_medium
         ws[f'G{i}'].border = border_medium
     for i in range(10, 19):
-        ws[f'H{i}'] = f'=G2-G{i}'
+        ws[f'H{i}'] = ws[f'G{i}'].value - ws['G2'].value
+        # ws[f'H{i}'] = f'=G{i}-G2'
         ws[f'H{i}'].alignment = align_center
         ws[f'H{i}'].border = border_medium
         ws.conditional_formatting.add(f'H{i}',
-                                      CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_red,
-                                                 fill=fill_red))
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True,
-                                                          font=fn_green, fill=fill_green))
+                                      CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green,
+                                                 fill=fill_green))
+        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True,
+                                                          font=fn_red, fill=fill_red))
     ws = adjust_columns_width(ws)
 
     print(f'Write "{report_sheets["report"]}" sheets to file: "{file_name}"')
