@@ -9,7 +9,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.14"
+    program_version = "0.4.0"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 0
@@ -21,32 +21,23 @@ if __name__ == '__main__':
     if process_month == 0:
         process_month = datetime.date.today().month
 
-    # main variables
-    # main_urls = {
-    #     f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211'
-    # }
-
     urls = {
-        # f'Строительство гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City',
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211',
         f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone'
-    }
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone'}
 
     data_sheet = {'city_main_build': f'Осн. стр. гор.ВОЛС {process_year}',
-                   'city_ext_build': f'Доп. стр. гор.ВОЛС {process_year}',
-                   'city_reconstruction': f'Реконструкция гор.ВОЛС {process_year}',
-                   'zone_build':  f'Строительство зон.ВОЛС {process_year}',
-                   'zone_reconstruction': f'Реконструкция зон.ВОЛС {process_year}'
-    }
+                  'city_ext_build': f'Доп. стр. гор.ВОЛС {process_year}',
+                  'city_reconstruction': f'Реконструкция гор.ВОЛС {process_year}',
+                  'zone_build':  f'Строительство зон.ВОЛС {process_year}',
+                  'zone_reconstruction': f'Реконструкция зон.ВОЛС {process_year}'}
 
     report_sheets = {'report': "Отчетная таблица",
                      'current_month': f'Активные мероприятия {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}',
                      'tz': 'Нет ТЗ',
                      'sending_po': "Нет передачи ТЗ",
-                     'received_po': 'Не приняты ТЗ'
-                     }
+                     'received_po': 'Не приняты ТЗ'}
 
     excel_tables_names = {data_sheet['city_main_build']: "Urban_VOLS_Main_Build",
                           data_sheet['city_ext_build']: "Urban_VOLS_Ext_Build",
@@ -56,8 +47,7 @@ if __name__ == '__main__':
                           report_sheets['current_month']: "current_month",
                           report_sheets['tz']: "tz_not_done",
                           report_sheets['sending_po']: "sending_po_not_done",
-                          report_sheets['received_po']: "received_po_not_done",
-                          }
+                          report_sheets['received_po']: "received_po_not_done"}
 
     excel_cell_names = fill_cell_names()
 
@@ -397,20 +387,20 @@ if __name__ == '__main__':
     ws['B26'].alignment = align_center
     ws['B26'].border = border_medium
     ws['C26'] = sum_done_events(ext_build_df, process_columns_date['ks2_date'],
-                               process_columns_date['commissioning_date'], process_column_status['ks2_status'],
-                               process_column_status['commissioning_status'], ['Исполнена'], process_month, last_days_of_month)
+                                process_columns_date['commissioning_date'], process_column_status['ks2_status'],
+                                process_column_status['commissioning_status'], ['Исполнена'], process_month, last_days_of_month)
     ws['C26'].alignment = align_center
     ws['C26'].border = border_medium
     ws['D26'] = ws['C26'].value - ws['B26'].value
     ws['D26'].alignment = align_center
     ws['D26'].border = border_medium
     ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
-                                                   fill=fill_red))
+                                                    fill=fill_red))
     ws.conditional_formatting.add('D26',
                                   CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
                                              fill=fill_green))
     ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
-                                                   fill=fill_yellow))
+                                                    fill=fill_yellow))
 
     for i, process in zip(range(10, 19),
                           ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status',
