@@ -1,258 +1,15 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 
-import sys
-from pathlib import Path
-import datetime
-import pandas as pd
-import openpyxl as openpyxl
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 import openpyxl.styles.borders as borders_style
-from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.table import Table, TableStyleInfo
-
-
-def fill_cell_names():
-    """
-    Заполнение словаря для обращения к ячейкам Excel 1:A, 2:B,... 27:AA, 28:AB и так далее до ZZZ
-
-    :return Dictionary:
-    """
-    _count = 1
-    _cell_names = {}
-
-    for _i in range(65, 91):
-        _cell_names[_count] = chr(_i)
-        _count += 1
-    for _i in range(65, 91):
-        for _j in range(65, 91):
-            _cell_names[_count] = chr(_i) + chr(_j)
-            _count += 1
-    for _i in range(65, 91):
-        for _j in range(65, 91):
-            for _k in range(65, 91):
-                _cell_names[_count] = chr(_i) + chr(_j) + chr(_k)
-                _count += 1
-    return _cell_names
-
-
-# Colors for print
-class Color:
-    """
-    Содержит кодировки цветов для консольного вывода
-    """
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END = '\033[0m'
-
-
-def print_debug(level, message):
-    """
-    Функция печати DEBUG сообщений.
-    Принимает параметр номер и само сообщение.
-    Сообщение должно быть в формате строки вывода
-
-    :param level:
-    :param message:
-    """
-    print(f'{Color.RED}DEBUG ({level}): \n{Color.END}{Color.YELLOW}{message}{Color.END}')
-
-
-def read_from_dashboard(_url):
-    """
-    Читает данные JSON из url и сохраняет их в DataFrame
-
-    :param _url:
-    :return DataFrame:
-    """
-    print(f'Read data from: "{_url}"')
-    try:
-        _dashboard_data = pd.read_json(_url, convert_dates=('дата', 'Дата'))
-    except Exception:
-        print(f"ERROR: can't read data from url {_url}")
-        sys.exit(1)
-    return _dashboard_data
-
-
-def sort_branch(_data_frame, _id, _branch):
-    """
-    Сортирует DataFrame и возвращает DataFrame с данными только по заданному филиала
-
-    :param _data_frame:
-    :param _id:
-    :param _branch:
-    :return DataFrame:
-    """
-    _data_frame = _data_frame[_data_frame[_id] == _branch]
-    return _data_frame
-
-
-def write_dataframe_to_file(_data_frame, _file_name, _sheet):
-    """
-    Записывает в Excel файл таблицы с данными
-
-    :param _data_frame:
-    :param _file_name:
-    :param _sheet:
-    """
-    if Path(_file_name).is_file():
-        with pd.ExcelWriter(_file_name, mode='a', if_sheet_exists="replace", datetime_format="DD.MM.YYYY",
-                            engine='openpyxl') as writer:
-            print(
-                f'Append "{_sheet}" sheet to exist file: "{_file_name}"')
-            _data_frame.to_excel(writer, sheet_name=_sheet, index=False)
-    else:
-        with pd.ExcelWriter(_file_name, mode='w', datetime_format="DD.MM.YYYY", engine='openpyxl') as writer:
-            print(
-                f'Write "{_sheet}" sheet to new file: "{_file_name}"')
-            _data_frame.to_excel(writer, sheet_name=_sheet, index=False)
-
-
-def format_table(_data_frame, _sheet, _file_name, _tables_names):
-    """
-    Форматирует таблицы для Excel файла и перезаписывает в файл в виде именованных Таблиц
-
-    :param _data_frame:
-    :param _sheet:
-    :param _file_name:
-    :param _tables_names:
-    """
-    if not _data_frame.empty:
-        print(
-            f'Read "{_sheet}" sheet from file: "{_file_name}"')
-        _wb = openpyxl.load_workbook(filename=_file_name)
-        tab = Table(displayName=_tables_names[_sheet],
-                    ref=f'A1:{excel_cell_names[len(_data_frame.columns)]}{len(_data_frame) + 1}')
-        style = TableStyleInfo(name=table_style, showRowStripes=True, showColumnStripes=True)
-        tab.tableStyleInfo = style
-        _wb[_sheet].add_table(tab)
-        try:
-            _ws = _wb[_sheet]
-        except Exception:
-            _ws = _wb.create_sheet(title=_sheet)
-        _ws = adjust_columns_width(_ws)
-        print(
-            f'Write formatted "{_sheet}" sheet to file: "{_file_name}"')
-        _wb.save(_file_name)
-    else:
-        pass
-
-
-def convert_date(_data_frame, _columns):
-    """
-    Конвертирует поля с датами в формат datetime64.
-    Возвращает конвертированный DataFrame
-
-    :param _data_frame:
-    :param _columns:
-    :return DataFrame:
-    """
-    _columns_names = _data_frame.columns
-    for _column_name in _columns_names:
-        for _column in _columns:
-            if _column.lower() in _column_name.lower():
-                _data_frame[_column_name] = pd.to_datetime(_data_frame[_column_name], dayfirst=True, format="%d.%m.%Y")
-            else:
-                pass
-    return _data_frame
-
-
-def convert_int(_data_frame, _columns):
-    """
-    Конвертирует поля с целыми в формат int32.
-    Возвращает конвертированный DataFrame
-
-    :param _data_frame:
-    :param _columns:
-    :return DataFrame:
-    """
-    _columns_names = list(_data_frame)
-    for _column_name in _columns_names:
-        for _column in _columns:
-            if _column.lower() in _column_name.lower():
-                _data_frame = _data_frame.astype({_column_name: 'int32'})
-            else:
-                pass
-    return _data_frame
-
-
-def sort_by_id(_data_frame, _id):
-    """
-    Сортирует DataFrame и возвращает DataFrame с данными отсортированными по возрастанию
-
-    :param _data_frame:
-    :param _id:
-    :return DataFrame:
-    """
-    _data_frame = _data_frame.sort_values(by=_id)
-    return _data_frame
-
-
-def last_day_of_month(_date):
-    if _date.month == 12:
-        return _date.replace(day=31)
-    return _date.replace(month=_date.month + 1, day=1) - datetime.timedelta(days=1)
-
-
-def sum_sort_events(_data_frame, _column, _condition):
-    _sum_sort = 0
-    for _sum_data in _data_frame[_column]:
-        if _sum_data in _condition:
-            _sum_sort += 1
-    return _sum_sort
-
-
-def sum_done_events(_data_frame, _ks_date, _commissioning_date, _ks_status, _commissioning_status, _condition, _month):
-    _sum_sort = 0
-    _sort_frame = _data_frame[[_ks_date, _commissioning_date, _ks_status, _commissioning_status]]
-    for _row in _sort_frame.values:
-        if pd.Timestamp(_row[0]) <= last_days_of_month[_month] and pd.Timestamp(_row[1]) <= last_days_of_month[_month] and _row[2] in _condition and _row[3] in _condition:
-            _sum_sort += 1
-    return _sum_sort
-
-
-def sum_sort_month_events(_data_frame, _column, _month):
-    _sum_sort = 0
-    for _sum_data in _data_frame[_column]:
-        if pd.Timestamp(_sum_data) <= last_days_of_month[_month]:
-            _sum_sort += 1
-    return _sum_sort
-
-
-def write_report_table_to_file(_data_frame, _file_name, _sheet, _excel_tables_names):
-    write_dataframe_to_file(_data_frame, _file_name, _sheet)
-    format_table(_data_frame, _sheet, _file_name, _excel_tables_names)
-
-
-def adjust_columns_width(_dataframe):
-    # Форматирование ширины полей отчётной таблицы
-    for _col in _dataframe.columns:
-        _max_length = 0
-        _column = get_column_letter(_col[0].column)  # Get the column name
-        for _cell in _col:
-            if _cell.coordinate in _dataframe.merged_cells:  # not check merge_cells
-                continue
-            try:  # Necessary to avoid error on empty cells
-                if len(str(_cell.value)) > _max_length:
-                    _max_length = len(str(_cell.value))
-            except Exception:
-                pass
-        _adjusted_width = (_max_length + 2)
-        _dataframe.column_dimensions[_column].width = _adjusted_width
-    return _dataframe
+from vols_functions import *
 
 
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.13"
+    program_version = "0.3.14"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 0
@@ -408,13 +165,13 @@ if __name__ == '__main__':
                 extended_build_df = data_frame.copy(deep=True)  # keep data for analyses
                 main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
                 write_dataframe_to_file(main_build_df, file_name, data_sheet['city_main_build'])
-                format_table(main_build_df, data_sheet['city_main_build'], file_name, excel_tables_names)
+                format_table(main_build_df, data_sheet['city_main_build'], file_name, excel_tables_names, excel_cell_names, table_style)
                 ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
                 write_dataframe_to_file(ext_build_df, file_name, data_sheet['city_ext_build'])
-                format_table(ext_build_df, data_sheet['city_ext_build'], file_name, excel_tables_names)
+                format_table(ext_build_df, data_sheet['city_ext_build'], file_name, excel_tables_names, excel_cell_names, table_style)
             else:
                 write_dataframe_to_file(data_frame, file_name, sheet)
-                format_table(data_frame, sheet, file_name, excel_tables_names)
+                format_table(data_frame, sheet, file_name, excel_tables_names, excel_cell_names, table_style)
 
     # Создание отчёта
     print(f'Generate report sheet: "{report_sheets["report"]}"')
@@ -613,12 +370,12 @@ if __name__ == '__main__':
     ws['B2'].font = fn_bold
     ws['B2'].alignment = align_center
     ws['B2'].border = border_medium
-    ws['B6'] = sum_sort_month_events(main_build_df, process_columns_date['plan_date'], process_month)
+    ws['B6'] = sum_sort_month_events(main_build_df, process_columns_date['plan_date'], process_month, last_days_of_month)
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
     ws['C6'] = sum_done_events(main_build_df, process_columns_date['ks2_date'],
                                process_columns_date['commissioning_date'], process_column_status['ks2_status'],
-                               process_column_status['commissioning_status'], ['Исполнена'], process_month)
+                               process_column_status['commissioning_status'], ['Исполнена'], process_month, last_days_of_month)
     ws['C6'].alignment = align_center
     ws['C6'].border = border_medium
     ws['D6'] = ws['C6'].value - ws['B6'].value
@@ -636,12 +393,12 @@ if __name__ == '__main__':
     ws['B22'].font = fn_bold
     ws['B22'].alignment = align_center
     ws['B22'].border = border_medium
-    ws['B26'] = sum_sort_month_events(ext_build_df, process_columns_date['plan_date'], process_month)
+    ws['B26'] = sum_sort_month_events(ext_build_df, process_columns_date['plan_date'], process_month, last_days_of_month)
     ws['B26'].alignment = align_center
     ws['B26'].border = border_medium
     ws['C26'] = sum_done_events(ext_build_df, process_columns_date['ks2_date'],
                                process_columns_date['commissioning_date'], process_column_status['ks2_status'],
-                               process_column_status['commissioning_status'], ['Исполнена'], process_month)
+                               process_column_status['commissioning_status'], ['Исполнена'], process_month, last_days_of_month)
     ws['C26'].alignment = align_center
     ws['C26'].border = border_medium
     ws['D26'] = ws['C26'].value - ws['B26'].value
@@ -700,12 +457,12 @@ if __name__ == '__main__':
     ws['G2'].font = fn_bold
     ws['G2'].alignment = align_center
     ws['G2'].border = border_medium
-    ws['G6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
+    ws['G6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month, last_days_of_month)
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
     ws['H6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date2'],
                                process_columns_date['commissioning_date2'], process_column_status['ks2_status2'],
-                               process_column_status['commissioning_status2'], ['Исполнена'], process_month)
+                               process_column_status['commissioning_status2'], ['Исполнена'], process_month, last_days_of_month)
     ws['H6'].alignment = align_center
     ws['H6'].border = border_medium
     ws['I6'] = ws['H6'].value - ws['G6'].value
@@ -761,13 +518,13 @@ if __name__ == '__main__':
 
     # Объединяем стройку и реконструкцию первые 5 столбцов
     current_month_dataframe = pd.concat([current_month_build_dataframe.iloc[:, :4], current_month_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
-    write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names)
+    write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names, excel_cell_names, table_style)
 
     # Создание листа Нет ТЗ
     # Объединяем ТЗ стройки и реконструкции первые 5 столбцов
     tz_dataframe = pd.concat([tz_build_dataframe.iloc[:, :4], tz_reconstruction_dataframe.iloc[:, :4]],
                              ignore_index=True).reset_index(drop=True)
-    write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names)
+    write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names, table_style)
 
     sending_po_dataframe = pd.concat(
         [sending_po_build_dataframe.iloc[:, :4], sending_po_reconstruction_dataframe.iloc[:, :4]],
@@ -777,7 +534,7 @@ if __name__ == '__main__':
     # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(
         keep=False).reset_index(drop=True)
-    write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names)
+    write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names, excel_cell_names, table_style)
 
     # Создание листа ТЗ не принято в ПО
     # Объединяем прием ТЗ стройки и реконструкции первые 5 полей
@@ -787,4 +544,4 @@ if __name__ == '__main__':
     # Убираем мероприятия с не выданными ТЗ и не переданные в ПО
     received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe],
                                       ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
-    write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names)
+    write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names, excel_cell_names, table_style)
