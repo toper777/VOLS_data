@@ -252,7 +252,7 @@ def adjust_columns_width(_dataframe):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.12"
+    program_version = "0.3.13"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 0
@@ -265,32 +265,37 @@ if __name__ == '__main__':
         process_month = datetime.date.today().month
 
     # main variables
+    # main_urls = {
+    #     f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211'
+    # }
+
     urls = {
-        f'Строительство гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City',
+        # f'Строительство гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City',
+        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211',
         f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone',
-        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211'
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone'
+    }
+
+    data_sheet = {'city_main_build': f'Осн. стр. гор.ВОЛС {process_year}',
+                   'city_ext_build': f'Доп. стр. гор.ВОЛС {process_year}',
+                   'city_reconstruction': f'Реконструкция гор.ВОЛС {process_year}',
+                   'zone_build':  f'Строительство зон.ВОЛС {process_year}',
+                   'zone_reconstruction': f'Реконструкция зон.ВОЛС {process_year}'
     }
 
     report_sheets = {'report': "Отчетная таблица",
-                     'tz_build': 'Нет ТЗ Стр.',
-                     'tz_reconstruction': 'Нет ТЗ Рек.',
-                     'sending_po_build': "Нет передачи ТЗ Стр.",
-                     'sending_po_reconstruction': "Нет передачи ТЗ Рек.",
-                     'received_po_build': 'Не приняты ТЗ Стр.',
-                     'received_po_reconstruction': 'Не приняты ТЗ Рек.',
                      'current_month': f'Активные мероприятия {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}',
                      'tz': 'Нет ТЗ',
                      'sending_po': "Нет передачи ТЗ",
                      'received_po': 'Не приняты ТЗ'
                      }
 
-    excel_tables_names = {f'Строительство гор.ВОЛС {process_year}': "Urban_VOLS_Build",
-                          f'Реконструкция гор.ВОЛС {process_year}': "Urban_VOLS_Reconstruction",
-                          f'Строительство зон.ВОЛС {process_year}': "Zone_VOLS_Build",
-                          f'Реконструкция зон.ВОЛС {process_year}': "Zone_VOLS_Reconstruction",
-                          f'Расш. стр. гор.ВОЛС {process_year}': "Extended_Urban_VOLS_Build",
+    excel_tables_names = {data_sheet['city_main_build']: "Urban_VOLS_Main_Build",
+                          data_sheet['city_ext_build']: "Urban_VOLS_Ext_Build",
+                          data_sheet['city_reconstruction']: "Urban_VOLS_Reconstruction",
+                          data_sheet['zone_build']: "Zone_VOLS_Build",
+                          data_sheet['zone_reconstruction']: "Zone_VOLS_Reconstruction",
                           report_sheets['current_month']: "current_month",
                           report_sheets['tz']: "tz_not_done",
                           report_sheets['sending_po']: "sending_po_not_done",
@@ -399,8 +404,17 @@ if __name__ == '__main__':
             data_frame = convert_date(data_frame, columns_dates)
             data_frame = convert_int(data_frame, columns_digit)
             data_frame = sort_by_id(data_frame, columns_for_sort)
-            write_dataframe_to_file(data_frame, file_name, sheet)
-            format_table(data_frame, sheet, file_name, excel_tables_names)
+            if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
+                extended_build_df = data_frame.copy(deep=True)  # keep data for analyses
+                main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
+                write_dataframe_to_file(main_build_df, file_name, data_sheet['city_main_build'])
+                format_table(main_build_df, data_sheet['city_main_build'], file_name, excel_tables_names)
+                ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
+                write_dataframe_to_file(ext_build_df, file_name, data_sheet['city_ext_build'])
+                format_table(ext_build_df, data_sheet['city_ext_build'], file_name, excel_tables_names)
+            else:
+                write_dataframe_to_file(data_frame, file_name, sheet)
+                format_table(data_frame, sheet, file_name, excel_tables_names)
 
     # Создание отчёта
     print(f'Generate report sheet: "{report_sheets["report"]}"')
@@ -414,7 +428,7 @@ if __name__ == '__main__':
         ws = wb.create_sheet(title=report_sheets['report'])
 
     # Формирование статических полей отчёта
-    ws['A1'] = "Основное строительство городских ВОЛС"
+    ws['A1'] = "Основное строительство ВОЛС"
     ws['A1'].font = fn_red_bold
     ws['A1'].border = border_thin
     ws['A2'] = 'Всего мероприятий'
@@ -457,7 +471,7 @@ if __name__ == '__main__':
     ws['C9'].alignment = align_center
     ws['C9'].border = border_medium
 
-    ws['A21'] = "Дополнительное строительство городских ВОЛС"
+    ws['A21'] = "Дополнительное строительство ВОЛС"
     ws['A21'].font = fn_red_bold
     ws['A21'].border = border_thin
     ws['A22'] = 'Всего мероприятий'
@@ -500,7 +514,7 @@ if __name__ == '__main__':
     ws['C29'].alignment = align_center
     ws['C29'].border = border_medium
 
-    ws['F1'] = "Реконструкция городских ВОЛС"
+    ws['F1'] = "Реконструкция ВОЛС"
     ws['F1'].font = fn_red_bold
     ws['F1'].border = border_thin
     ws['F2'] = 'Всего мероприятий'
@@ -585,14 +599,7 @@ if __name__ == '__main__':
     ws['I5'].border = border_medium
 
     # Анализ строительства ВОЛС
-
-    analyze_extended = True  # если True то использовать анализ по расширенному списку мероприятий
-
-    if analyze_extended:
-        dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[4])
-    else:
-        dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[0])
-
+    dashboard_data = extended_build_df
     build_dashboard_data = dashboard_data
     tz_build_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status']] != 'Исполнена']
@@ -681,7 +688,7 @@ if __name__ == '__main__':
                                                           font=fn_red, fill=fill_red))
 
     # Анализ реконструкции ВОЛС
-    dashboard_data = pd.read_excel(file_name, sheet_name=list(excel_tables_names.keys())[1])
+    dashboard_data = pd.read_excel(file_name, sheet_name=data_sheet['city_reconstruction'])
     reconstruction_dashboard_data = dashboard_data
     tz_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status2']] != 'Исполнена']
     sending_po_reconstruction_dataframe = dashboard_data[
