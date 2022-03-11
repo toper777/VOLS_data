@@ -252,7 +252,7 @@ def adjust_columns_width(_dataframe):
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.3.11"
+    program_version = "0.3.12"
 
     # Год анализа. Если оставить 0, то берется текущий год
     process_year = 0
@@ -414,7 +414,7 @@ if __name__ == '__main__':
         ws = wb.create_sheet(title=report_sheets['report'])
 
     # Формирование статических полей отчёта
-    ws['A1'] = "Строительство городских ВОЛС"
+    ws['A1'] = "Основное строительство городских ВОЛС"
     ws['A1'].font = fn_red_bold
     ws['A1'].border = border_thin
     ws['A2'] = 'Всего мероприятий'
@@ -456,6 +456,50 @@ if __name__ == '__main__':
     ws['C9'].font = fn_bold
     ws['C9'].alignment = align_center
     ws['C9'].border = border_medium
+
+    ws['A21'] = "Дополнительное строительство городских ВОЛС"
+    ws['A21'].font = fn_red_bold
+    ws['A21'].border = border_thin
+    ws['A22'] = 'Всего мероприятий'
+    ws['A22'].border = border_medium
+    ws['A24'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
+    ws['A24'].font = fn_red_bold
+    ws['A24'].border = border_thin
+    ws['A26'] = 'Учтенных ВОЛС в KPI'
+    ws['A26'].border = border_medium
+    ws['A28'] = 'Исполнение мероприятий в ЕСУП'
+    ws['A28'].font = fn_red_bold
+    ws['A28'].border = border_thin
+    ws['A29'] = 'Наименование мероприятия'
+    ws['A29'].font = fn_bold
+    ws['A29'].border = border_medium
+    ws['A30'] = 'Выпущены ТЗ'
+    ws['A30'].border = border_medium
+    ws['A31'] = 'Переданы ТЗ в ПО'
+    ws['A31'].border = border_medium
+    ws['A32'] = 'Приняты ТЗ ПО'
+    ws['A32'].border = border_medium
+    ws['A33'] = 'Подписание договора на ПИР/ПИР+СМР'
+    ws['A33'].border = border_medium
+    ws['A34'] = 'Линейная схема'
+    ws['A34'].border = border_medium
+    ws['A35'] = 'Получено ТУ'
+    ws['A35'].border = border_medium
+    ws['A36'] = 'Строительство трассы'
+    ws['A36'].border = border_medium
+    ws['A37'] = 'Подготовка актов КС-2,3'
+    ws['A37'].border = border_medium
+    ws['A38'] = 'Приёмка ВОЛС в эксплуатацию'
+    ws['A38'].border = border_medium
+    ws['B29'] = 'Выполнено'
+    ws['B29'].font = fn_bold
+    ws['B29'].alignment = align_center
+    ws['B29'].border = border_medium
+    ws['C29'] = f'{chr(0x0394)}'
+    ws['C29'].font = fn_bold
+    ws['C29'].alignment = align_center
+    ws['C29'].border = border_medium
+
     ws['F1'] = "Реконструкция городских ВОЛС"
     ws['F1'].font = fn_red_bold
     ws['F1'].border = border_thin
@@ -513,6 +557,20 @@ if __name__ == '__main__':
     ws['D5'].font = fn_bold
     ws['D5'].alignment = align_center
     ws['D5'].border = border_medium
+
+    ws['B25'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['B25'].font = fn_bold
+    ws['B25'].alignment = align_center
+    ws['B25'].border = border_medium
+    ws['C25'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['C25'].font = fn_bold
+    ws['C25'].alignment = align_center
+    ws['C25'].border = border_medium
+    ws['D25'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['D25'].font = fn_bold
+    ws['D25'].alignment = align_center
+    ws['D25'].border = border_medium
+
     ws['G5'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['G5'].font = fn_bold
     ws['G5'].alignment = align_center
@@ -541,14 +599,17 @@ if __name__ == '__main__':
     received_po_build_dataframe = dashboard_data[
         dashboard_data[process_column_status['received_tz_status']] != 'Исполнена']
 
-    ws['B2'] = dashboard_data[process_columns_date['plan_date']].count()
+    main_build_df = dashboard_data[dashboard_data['KPI ПТР текущего года, км'].notnull()]
+    ext_build_df = dashboard_data[~dashboard_data['KPI ПТР текущего года, км'].notnull()]
+
+    ws['B2'] = main_build_df[process_columns_date['plan_date']].count()
     ws['B2'].font = fn_bold
     ws['B2'].alignment = align_center
     ws['B2'].border = border_medium
-    ws['B6'] = sum_sort_month_events(dashboard_data, process_columns_date['plan_date'], process_month)
+    ws['B6'] = sum_sort_month_events(main_build_df, process_columns_date['plan_date'], process_month)
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
-    ws['C6'] = sum_done_events(dashboard_data, process_columns_date['ks2_date'],
+    ws['C6'] = sum_done_events(main_build_df, process_columns_date['ks2_date'],
                                process_columns_date['commissioning_date'], process_column_status['ks2_status'],
                                process_column_status['commissioning_status'], ['Исполнена'], process_month)
     ws['C6'].alignment = align_center
@@ -564,15 +625,53 @@ if __name__ == '__main__':
     ws.conditional_formatting.add('D6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
                                                    fill=fill_yellow))
 
+    ws['B22'] = ext_build_df[process_columns_date['plan_date']].count()
+    ws['B22'].font = fn_bold
+    ws['B22'].alignment = align_center
+    ws['B22'].border = border_medium
+    ws['B26'] = sum_sort_month_events(ext_build_df, process_columns_date['plan_date'], process_month)
+    ws['B26'].alignment = align_center
+    ws['B26'].border = border_medium
+    ws['C26'] = sum_done_events(ext_build_df, process_columns_date['ks2_date'],
+                               process_columns_date['commissioning_date'], process_column_status['ks2_status'],
+                               process_column_status['commissioning_status'], ['Исполнена'], process_month)
+    ws['C26'].alignment = align_center
+    ws['C26'].border = border_medium
+    ws['D26'] = ws['C26'].value - ws['B26'].value
+    ws['D26'].alignment = align_center
+    ws['D26'].border = border_medium
+    ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                   fill=fill_red))
+    ws.conditional_formatting.add('D26',
+                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
+                                             fill=fill_green))
+    ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
+                                                   fill=fill_yellow))
+
     for i, process in zip(range(10, 19),
                           ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status',
                            'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
-        ws[f'B{i}'] = sum_sort_events(dashboard_data, process_column_status[process], ['Исполнена', 'Не требуется'])
+        ws[f'B{i}'] = sum_sort_events(main_build_df, process_column_status[process], ['Исполнена', 'Не требуется'])
         ws[f'B{i}'].alignment = align_center
         ws[f'B{i}'].border = border_medium
     for i in range(10, 19):
         ws[f'C{i}'] = ws[f'B{i}'].value - ws['B2'].value
-        # ws[f'C{i}'] = f'=B{i}-B2'
+        ws[f'C{i}'].alignment = align_center
+        ws[f'C{i}'].border = border_medium
+        ws.conditional_formatting.add(f'C{i}',
+                                      CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green,
+                                                 fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True,
+                                                          font=fn_red, fill=fill_red))
+
+    for i, process in zip(range(30, 39),
+                          ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status',
+                           'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
+        ws[f'B{i}'] = sum_sort_events(ext_build_df, process_column_status[process], ['Исполнена', 'Не требуется'])
+        ws[f'B{i}'].alignment = align_center
+        ws[f'B{i}'].border = border_medium
+    for i in range(30, 39):
+        ws[f'C{i}'] = ws[f'B{i}'].value - ws['B22'].value
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
         ws.conditional_formatting.add(f'C{i}',
