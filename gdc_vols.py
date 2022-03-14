@@ -1,5 +1,5 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
-
+import argparse
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 import openpyxl.styles.borders as borders_style
@@ -9,17 +9,71 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.0"
+    program_version = "0.4.1"
 
-    # Год анализа. Если оставить 0, то берется текущий год
-    process_year = 0
-    if process_year == 0:
+    # Стиль таблицы Excel
+    table_style = "TableStyleMedium2"
+    # Наименования колонок для преобразования даты
+    columns_dates = ['Планируемая дата окончания', 'Дата ввода', '_дата']
+    # Наименования колонок для преобразования числа
+    columns_digit = ['ID']
+    # Наименование колонки для сортировки по возрастанию
+    columns_for_sort = ['ID']
+    work_branch = "Кавказский филиал"
+    today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
+    id_branch = "Филиал"
+    id_esup = "План ЕСУП"
+
+    last_days_of_month = {}
+
+    # Excel styles
+    fn_bold = Font(bold=True)
+    fn_red_bold = Font(color="FF0000", bold=True)
+    fn_red = Font(color="B22222")
+    fn_green = Font(color="006400")
+    fn_mag = Font(color="6633FF")
+    bd = Side(style='thick', color="000000")
+    fill_red = PatternFill(start_color='FFCCCC', end_color='FFCCCC', fill_type='solid')
+    fill_yellow = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+    fill_green = PatternFill(start_color='CCFFCC', end_color='CCFFCC', fill_type='solid')
+    align_center = Alignment(horizontal="center")
+    border_medium = Border(left=Side(style=borders_style.BORDER_MEDIUM), right=Side(style=borders_style.BORDER_MEDIUM),
+                           top=Side(style=borders_style.BORDER_MEDIUM), bottom=Side(style=borders_style.BORDER_MEDIUM))
+    border_thin = Border(left=Side(style=borders_style.BORDER_THIN), right=Side(style=borders_style.BORDER_THIN),
+                         top=Side(style=borders_style.BORDER_THIN), bottom=Side(style=borders_style.BORDER_THIN))
+
+
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description=f'{program_name} v.{program_version}')
+    parser.add_argument("-y", "--year", type=int, help="year for processing")
+    parser.add_argument("-m", "--month", type=int, help="month for processing")
+    parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
+    parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
+
+    args = parser.parse_args()
+
+    # Год анализа.
+    if args.year is None:
         process_year = datetime.date.today().year
+    else:
+        process_year = args.year
 
-    # Месяц для анализа. Если оставить 0, то берется текущий месяц
-    process_month = 0
-    if process_month == 0:
+        # Месяц для анализа.
+    if args.month is None:
         process_month = datetime.date.today().month
+    else:
+        process_month = args.month
+
+    if args.report_branch is not None:
+        work_branch = args.report_branch
+
+    if args.report_file is None:
+        vols_dir = f'\\\\megafon.ru\\KVK\\KRN\\Files\\TelegrafFiles\\ОПРС\\!Проекты РЦРП\\Блок №4\\ВОЛС\\{process_year}\\'
+        # vols_dir = f'.\\'
+        vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}.xlsx'
+        file_name = f'{vols_dir}{vols_file}'
+    else:
+        file_name = args.report_file
 
     urls = {
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211',
@@ -50,28 +104,6 @@ if __name__ == '__main__':
                           report_sheets['received_po']: "received_po_not_done"}
 
     excel_cell_names = fill_cell_names()
-
-    # Стиль таблицы Excel
-    table_style = "TableStyleMedium2"
-    # Наименования колонок для преобразования даты
-    columns_dates = ['Планируемая дата окончания', 'Дата ввода', '_дата']
-    # Наименования колонок для преобразования числа
-    columns_digit = ['ID']
-    # Наименование колонки для сортировки по возрастанию
-    columns_for_sort = ['ID']
-    work_branch = "Кавказский филиал"
-    today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
-    vols_dir = f'y:\\Блок №4\\ВОЛС\\{process_year}\\'
-    # vols_dir = f'.\\'
-    vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}.xlsx'
-    file_name = f'{vols_dir}{vols_file}'
-    id_branch = "Филиал"
-    id_esup = "План ЕСУП"
-
-    last_days_of_month = {}
-    count = 0
-    all_events = 0
-    sort_events = 0
 
     process_columns_date = {'plan_date': 'Планируемая дата окончания',
                             'tz_date': 'Разработка ТЗ_дата',
@@ -120,21 +152,6 @@ if __name__ == '__main__':
                              'traffic_status2': 'Запуск трафика_Статус',
                              'region': 'Регион/Зона мероприятия'
                              }
-    # Excel styles
-    fn_bold = Font(bold=True)
-    fn_red_bold = Font(color="FF0000", bold=True)
-    fn_red = Font(color="B22222")
-    fn_green = Font(color="006400")
-    fn_mag = Font(color="6633FF")
-    bd = Side(style='thick', color="000000")
-    fill_red = PatternFill(start_color='FFCCCC', end_color='FFCCCC', fill_type='solid')
-    fill_yellow = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
-    fill_green = PatternFill(start_color='CCFFCC', end_color='CCFFCC', fill_type='solid')
-    align_center = Alignment(horizontal="center")
-    border_medium = Border(left=Side(style=borders_style.BORDER_MEDIUM), right=Side(style=borders_style.BORDER_MEDIUM),
-                           top=Side(style=borders_style.BORDER_MEDIUM), bottom=Side(style=borders_style.BORDER_MEDIUM))
-    border_thin = Border(left=Side(style=borders_style.BORDER_THIN), right=Side(style=borders_style.BORDER_THIN),
-                         top=Side(style=borders_style.BORDER_THIN), bottom=Side(style=borders_style.BORDER_THIN))
 
     print(f'{program_name}: {program_version}')
 
