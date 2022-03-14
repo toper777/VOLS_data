@@ -9,7 +9,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.2"
+    program_version = "0.4.3"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -66,10 +66,9 @@ if __name__ == '__main__':
         work_branch = args.report_branch
 
     if args.report_file is None:
-        vols_dir = f'\\\\megafon.ru\\KVK\\KRN\\Files\\TelegrafFiles\\ОПРС\\!Проекты РЦРП\\Блок №4\\ВОЛС\\{process_year}\\'
-        # vols_dir = f'.\\'
+        vols_dir = f'\\\\megafon.ru\\KVK\\KRN\\Files\\TelegrafFiles\\ОПРС\\!Проекты РЦРП\\Блок №4\\ВОЛС\\{process_year}'
         vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}.xlsx'
-        file_name = f'{vols_dir}{vols_file}'
+        file_name = f'{vols_dir}\\{vols_file}'
     else:
         file_name = args.report_file
 
@@ -165,7 +164,7 @@ if __name__ == '__main__':
             data_frame = data_frame.reset_index(drop=True)
             data_frame = convert_date(data_frame, columns_dates)
             data_frame = convert_int(data_frame, columns_digit)
-            data_frame = sort_by_id(data_frame, columns_for_sort)
+            data_frame = sort_by_column(data_frame, columns_for_sort)
             if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
                 extended_build_df = data_frame.copy(deep=True)  # keep extended data for analyses
                 main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
@@ -526,7 +525,7 @@ if __name__ == '__main__':
     current_month_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'  # Добавляем столбец с бизнес-процессом
 
     # Объединяем стройку и реконструкцию
-    current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
+    current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
     write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names, excel_cell_names, table_style)
 
     # Создание листа Нет ТЗ
@@ -536,7 +535,7 @@ if __name__ == '__main__':
     tz_reconstruction_dataframe = tz_reconstruction_dataframe.iloc[:, :4]
     tz_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
     # Объединяем ТЗ стройки и реконструкции
-    tz_dataframe = pd.concat([tz_build_dataframe, tz_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
+    tz_dataframe = pd.concat([tz_build_dataframe, tz_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
     write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names, table_style)
 
     # Создание листа Не переданы ТЗ в ПО
@@ -549,7 +548,7 @@ if __name__ == '__main__':
     sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(
-        keep=False).reset_index(drop=True)
+        keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
     write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names, excel_cell_names, table_style)
 
     # Создание листа ТЗ не принято ПО
@@ -562,5 +561,5 @@ if __name__ == '__main__':
     received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ и не переданные в ПО
     received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe],
-                                      ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
+                                      ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
     write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names, excel_cell_names, table_style)

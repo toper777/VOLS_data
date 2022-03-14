@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
-import pandas as pd
 import datetime
 import pandas as pd
 import openpyxl as openpyxl
@@ -182,15 +181,15 @@ def convert_int(_data_frame, _columns):
     return _data_frame
 
 
-def sort_by_id(_data_frame, _id):
+def sort_by_column(_data_frame, _column):
     """
     Сортирует DataFrame и возвращает DataFrame с данными отсортированными по возрастанию
 
     :param _data_frame:
-    :param _id:
+    :param _column:
     :return DataFrame:
     """
-    _data_frame = _data_frame.sort_values(by=_id)
+    _data_frame = _data_frame.sort_values(by=_column)
     return _data_frame
 
 
