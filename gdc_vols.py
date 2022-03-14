@@ -9,7 +9,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.1"
+    program_version = "0.4.2"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # Наименования колонок для преобразования числа
     columns_digit = ['ID']
     # Наименование колонки для сортировки по возрастанию
-    columns_for_sort = ['ID']
+    columns_for_sort = ['Регион/Зона мероприятия']
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     id_branch = "Филиал"
@@ -42,14 +42,12 @@ if __name__ == '__main__':
     border_thin = Border(left=Side(style=borders_style.BORDER_THIN), right=Side(style=borders_style.BORDER_THIN),
                          top=Side(style=borders_style.BORDER_THIN), bottom=Side(style=borders_style.BORDER_THIN))
 
-
     # Parse command line arguments
     parser = argparse.ArgumentParser(description=f'{program_name} v.{program_version}')
     parser.add_argument("-y", "--year", type=int, help="year for processing")
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
-
     args = parser.parse_args()
 
     # Год анализа.
@@ -169,7 +167,7 @@ if __name__ == '__main__':
             data_frame = convert_int(data_frame, columns_digit)
             data_frame = sort_by_id(data_frame, columns_for_sort)
             if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
-                extended_build_df = data_frame.copy(deep=True)  # keep data for analyses
+                extended_build_df = data_frame.copy(deep=True)  # keep extended data for analyses
                 main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
                 write_dataframe_to_file(main_build_df, file_name, data_sheet['city_main_build'])
                 format_table(main_build_df, data_sheet['city_main_build'], file_name, excel_tables_names, excel_cell_names, table_style)
@@ -515,6 +513,8 @@ if __name__ == '__main__':
     curr_status_bool_mask = (~build_dashboard_data[process_column_status['commissioning_status']].str.contains('Исполнено|Не требуется', regex=True)) & (~build_dashboard_data[process_column_status['ks2_status']].str.contains('Исполнено|Не требуется', regex=True))
     # Выборка объектов реконструкции по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
+    current_month_build_dataframe = current_month_build_dataframe.iloc[:, :4]
+    current_month_build_dataframe['БП'] = 'Строительство ВОЛС'
 
     # маска для текущего месяца
     curr_month_bool_mask = (reconstruction_dashboard_data[process_columns_date['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (reconstruction_dashboard_data[process_columns_date['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
@@ -522,32 +522,44 @@ if __name__ == '__main__':
     curr_status_bool_mask = (~reconstruction_dashboard_data[process_column_status['commissioning_status2']].str.contains('Исполнено|Не требуется', regex=True)) & (~reconstruction_dashboard_data[process_column_status['ks2_status2']].str.contains('Исполнено|Не требуется', regex=True))
     # Выборка объектов реконструкции по маскам
     current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
+    current_month_reconstruction_dataframe = current_month_reconstruction_dataframe.iloc[:, :4]  # Оставляем только первые 5 столбцов
+    current_month_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'  # Добавляем столбец с бизнес-процессом
 
-    # Объединяем стройку и реконструкцию первые 5 столбцов
-    current_month_dataframe = pd.concat([current_month_build_dataframe.iloc[:, :4], current_month_reconstruction_dataframe.iloc[:, :4]], ignore_index=True).reset_index(drop=True)
+    # Объединяем стройку и реконструкцию
+    current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names, excel_cell_names, table_style)
 
     # Создание листа Нет ТЗ
-    # Объединяем ТЗ стройки и реконструкции первые 5 столбцов
-    tz_dataframe = pd.concat([tz_build_dataframe.iloc[:, :4], tz_reconstruction_dataframe.iloc[:, :4]],
-                             ignore_index=True).reset_index(drop=True)
+    # Формируем таблицы ТЗ для стройки и реконструкции
+    tz_build_dataframe = tz_build_dataframe.iloc[:, :4]
+    tz_build_dataframe['БП'] = 'Строительство ВОЛС'
+    tz_reconstruction_dataframe = tz_reconstruction_dataframe.iloc[:, :4]
+    tz_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
+    # Объединяем ТЗ стройки и реконструкции
+    tz_dataframe = pd.concat([tz_build_dataframe, tz_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
     write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names, table_style)
 
-    sending_po_dataframe = pd.concat(
-        [sending_po_build_dataframe.iloc[:, :4], sending_po_reconstruction_dataframe.iloc[:, :4]],
-        ignore_index=True).reset_index(drop=True)
-
     # Создание листа Не переданы ТЗ в ПО
+    # Формируем таблицы передачи в ПО для стройки и реконструкции
+    sending_po_build_dataframe = sending_po_build_dataframe.iloc[:, :4]
+    sending_po_build_dataframe['БП'] = 'Строительство ВОЛС'
+    sending_po_reconstruction_dataframe = sending_po_reconstruction_dataframe.iloc[:, :4]
+    sending_po_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
+    # Объединяем передачу ТЗ в ПО стройки и реконструкции
+    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(
         keep=False).reset_index(drop=True)
     write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names, excel_cell_names, table_style)
 
-    # Создание листа ТЗ не принято в ПО
-    # Объединяем прием ТЗ стройки и реконструкции первые 5 полей
-    received_po_dataframe = pd.concat(
-        [received_po_build_dataframe.iloc[:, :4], received_po_reconstruction_dataframe.iloc[:, :4]],
-        ignore_index=True).reset_index(drop=True)
+    # Создание листа ТЗ не принято ПО
+    # Формируем таблицы не принято ПО для стройки и реконструкции
+    received_po_build_dataframe = received_po_build_dataframe.iloc[:, :4]
+    received_po_build_dataframe['БП'] = 'Строительство ВОЛС'
+    received_po_reconstruction_dataframe = received_po_reconstruction_dataframe.iloc[:, :4]
+    received_po_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
+    # Объединяем не принято в ПО стройки и реконструкции
+    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ и не переданные в ПО
     received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe],
                                       ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True)
