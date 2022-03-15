@@ -1,5 +1,6 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import argparse
+import locale
 import os
 
 from openpyxl.formatting.rule import CellIsRule
@@ -11,12 +12,12 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.4"
+    program_version = "0.4.5"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
     # Наименования колонок для преобразования даты
-    columns_dates = ['Планируемая дата окончания', 'Дата ввода', '_дата']
+    columns_date = ['Планируемая дата окончания', 'Дата ввода', '_дата']
     # Наименования колонок для преобразования числа
     columns_digit = ['ID']
     # Наименование колонки для сортировки по возрастанию
@@ -27,6 +28,9 @@ if __name__ == '__main__':
     id_esup = "План ЕСУП"
 
     last_days_of_month = {}
+
+    # Set Russian localization
+    locale.setlocale(locale.LC_TIME, "ru_RU")
 
     # Excel styles
     fn_bold = Font(bold=True)
@@ -168,7 +172,7 @@ if __name__ == '__main__':
             data_frame = read_from_dashboard(url)
             data_frame = sort_branch(data_frame, id_branch, work_branch)
             data_frame = data_frame.reset_index(drop=True)
-            data_frame = convert_date(data_frame, columns_dates)
+            data_frame = convert_date(data_frame, columns_date)
             data_frame = convert_int(data_frame, columns_digit)
             data_frame = sort_by_column(data_frame, columns_for_sort)
             if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
