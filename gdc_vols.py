@@ -1,5 +1,7 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import argparse
+import os
+
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 import openpyxl.styles.borders as borders_style
@@ -9,7 +11,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.3"
+    program_version = "0.4.4"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -158,6 +160,10 @@ if __name__ == '__main__':
     get_report = True
 
     if get_report:
+        if Path(file_name).is_file():
+            print(f'Remove old file {file_name}')
+            os.remove(file_name)
+
         for sheet, url in urls.items():
             data_frame = read_from_dashboard(url)
             data_frame = sort_branch(data_frame, id_branch, work_branch)
@@ -364,8 +370,7 @@ if __name__ == '__main__':
     build_dashboard_data = dashboard_data
     tz_build_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status']] != 'Исполнена']
-    received_po_build_dataframe = dashboard_data[
-        dashboard_data[process_column_status['received_tz_status']] != 'Исполнена']
+    received_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['received_tz_status']] != 'Исполнена']
 
     main_build_df = dashboard_data[dashboard_data['KPI ПТР текущего года, км'].notnull()]
     ext_build_df = dashboard_data[~dashboard_data['KPI ПТР текущего года, км'].notnull()]

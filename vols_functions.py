@@ -242,6 +242,6 @@ def adjust_columns_width(_dataframe):
                     _max_length = len(str(_cell.value))
             except Exception:
                 pass
-        _adjusted_width = (_max_length + 2)
+        _adjusted_width = _max_length + 3
         _dataframe.column_dimensions[_column].width = _adjusted_width
     return _dataframe
