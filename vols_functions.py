@@ -77,19 +77,6 @@ def read_from_dashboard(_url):
     return _dashboard_data
 
 
-def sort_branch(_data_frame, _id, _branch):
-    """
-    Сортирует DataFrame и возвращает DataFrame с данными только по заданному филиала
-
-    :param _data_frame:
-    :param _id:
-    :param _branch:
-    :return DataFrame:
-    """
-    _data_frame = _data_frame[_data_frame[_id] == _branch]
-    return _data_frame
-
-
 def write_dataframe_to_file(_data_frame, _file_name, _sheet):
     """
     Записывает в Excel файл таблицы с данными
@@ -178,18 +165,6 @@ def convert_int(_data_frame, _columns):
                 _data_frame = _data_frame.astype({_column_name: 'int32'})
             else:
                 pass
-    return _data_frame
-
-
-def sort_by_column(_data_frame, _column):
-    """
-    Сортирует DataFrame и возвращает DataFrame с данными отсортированными по возрастанию
-
-    :param _data_frame:
-    :param _column:
-    :return DataFrame:
-    """
-    _data_frame = _data_frame.sort_values(by=_column)
     return _data_frame
 
 
