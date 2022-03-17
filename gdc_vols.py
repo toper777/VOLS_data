@@ -12,7 +12,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.5"
+    program_version = "0.4.6"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -54,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
+    parser.add_argument("-o", "--report-only", help="Don't get new online data. Generate report only", action='store_true')
     args = parser.parse_args()
 
     # Год анализа.
@@ -161,9 +162,8 @@ if __name__ == '__main__':
     # Получение исходных данных и запись форматированных данных
 
     # get_report - определяет получать ли внешние данные
-    get_report = True
 
-    if get_report:
+    if not args.report_only:
         if Path(file_name).is_file():
             print(f'Remove old file {file_name}')
             os.remove(file_name)
@@ -370,7 +370,15 @@ if __name__ == '__main__':
     ws['I5'].border = border_medium
 
     # Анализ строительства ВОЛС
-    dashboard_data = extended_build_df
+    if not args.report_only:
+        dashboard_data = extended_build_df
+    else:
+        print(f'Read "{data_sheet["city_main_build"]}" sheet from file: "{file_name}"')
+        df_main_build = pd.read_excel(file_name, sheet_name=data_sheet['city_main_build'])
+        print(f'Read "{data_sheet["city_ext_build"]}" sheet from file: "{file_name}"')
+        df_ext_build = pd.read_excel(file_name, sheet_name=data_sheet['city_ext_build'])
+        dashboard_data = pd.concat([df_main_build, df_ext_build])
+
     build_dashboard_data = dashboard_data
     tz_build_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = dashboard_data[dashboard_data[process_column_status['send_tz_status']] != 'Исполнена']
@@ -458,6 +466,7 @@ if __name__ == '__main__':
                                                           font=fn_red, fill=fill_red))
 
     # Анализ реконструкции ВОЛС
+    print(f'Read "{data_sheet["city_reconstruction"]}" sheet from file: "{file_name}"')
     dashboard_data = pd.read_excel(file_name, sheet_name=data_sheet['city_reconstruction'])
     reconstruction_dashboard_data = dashboard_data
     tz_reconstruction_dataframe = dashboard_data[dashboard_data[process_column_status['tz_status2']] != 'Исполнена']
