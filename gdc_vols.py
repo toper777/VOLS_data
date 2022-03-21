@@ -12,7 +12,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.8"
+    program_version = "0.4.9"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -158,9 +158,6 @@ if __name__ == '__main__':
     print(f'{program_name}: {program_version}')
 
     # Получение исходных данных и запись форматированных данных
-
-    # get_report - определяет получать ли внешние данные
-
     if not args.report_only:
         if Path(file_name).is_file():
             print(f'Remove old file {file_name}')
@@ -470,10 +467,8 @@ if __name__ == '__main__':
     dashboard_data = pd.read_excel(file_name, sheet_name=data_sheets['city_reconstruction'])
     reconstruction_dashboard_data = dashboard_data
     tz_reconstruction_dataframe = dashboard_data[dashboard_data[process_columns['tz_status2']] != 'Исполнена']
-    sending_po_reconstruction_dataframe = dashboard_data[
-        dashboard_data[process_columns['send_tz_status2']] != 'Исполнена']
-    received_po_reconstruction_dataframe = dashboard_data[
-        dashboard_data[process_columns['received_tz_status2']] != 'Исполнена']
+    sending_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_columns['send_tz_status2']] != 'Исполнена']
+    received_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_columns['received_tz_status2']] != 'Исполнена']
 
     ws['G2'] = dashboard_data[process_columns['plan_date']].count()
     ws['G2'].font = fn_bold
@@ -526,29 +521,25 @@ if __name__ == '__main__':
     # Создание листа Активные мероприятия строительства месяца отчёта
     # маска для текущего месяца
     curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
-    # маска для не "Исполнено" или не "Не требуется"
-    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнено|Не требуется', regex=True)) & (~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнено|Не требуется', regex=True))
+    # маска для не "Исполнена" или не "Не требуется"
+    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_build_dataframe = current_month_build_dataframe[[process_columns['id'],
-                                                                   process_columns['branch'],
                                                                    process_columns['region'],
                                                                    process_columns['name'],
-                                                                   process_columns['program'],
                                                                    process_columns['plan_date']]]
     current_month_build_dataframe['БП'] = 'Строительство ВОЛС'
 
     # маска для текущего месяца
     curr_month_bool_mask = (reconstruction_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (reconstruction_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
-    # маска для не "Исполнено" или не "Не требуется"
-    curr_status_bool_mask = (~reconstruction_dashboard_data[process_columns['commissioning_status2']].str.contains('Исполнено|Не требуется', regex=True)) & (~reconstruction_dashboard_data[process_columns['ks2_status2']].str.contains('Исполнено|Не требуется', regex=True))
+    # маска для не "Исполнена" или не "Не требуется"
+    curr_status_bool_mask = (~reconstruction_dashboard_data[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) & (~reconstruction_dashboard_data[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов реконструкции по маскам
     current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
-                                                                                     process_columns['branch'],
                                                                                      process_columns['region'],
                                                                                      process_columns['name'],
-                                                                                     process_columns['program'],
                                                                                      process_columns['plan_date']]]
     current_month_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'  # Добавляем столбец с бизнес-процессом
 
@@ -559,17 +550,13 @@ if __name__ == '__main__':
     # Создание листа Нет ТЗ
     # Формируем таблицы ТЗ для стройки и реконструкции
     tz_build_dataframe = tz_build_dataframe[[process_columns['id'],
-                                             process_columns['branch'],
                                              process_columns['region'],
                                              process_columns['name'],
-                                             process_columns['program'],
                                              process_columns['plan_date']]]
     tz_build_dataframe['БП'] = 'Строительство ВОЛС'
     tz_reconstruction_dataframe = tz_reconstruction_dataframe[[process_columns['id'],
-                                                               process_columns['branch'],
                                                                process_columns['region'],
                                                                process_columns['name'],
-                                                               process_columns['program'],
                                                                process_columns['plan_date']]]
     tz_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
     # Объединяем ТЗ стройки и реконструкции
@@ -579,17 +566,13 @@ if __name__ == '__main__':
     # Создание листа Не переданы ТЗ в ПО
     # Формируем таблицы передачи в ПО для стройки и реконструкции
     sending_po_build_dataframe = sending_po_build_dataframe[[process_columns['id'],
-                                                             process_columns['branch'],
                                                              process_columns['region'],
                                                              process_columns['name'],
-                                                             process_columns['program'],
                                                              process_columns['plan_date']]]
     sending_po_build_dataframe['БП'] = 'Строительство ВОЛС'
     sending_po_reconstruction_dataframe = sending_po_reconstruction_dataframe[[process_columns['id'],
-                                                                               process_columns['branch'],
                                                                                process_columns['region'],
                                                                                process_columns['name'],
-                                                                               process_columns['program'],
                                                                                process_columns['plan_date']]]
     sending_po_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
     # Объединяем передачу ТЗ в ПО стройки и реконструкции
@@ -600,13 +583,14 @@ if __name__ == '__main__':
 
     # Создание листа ТЗ не принято ПО
     # Формируем таблицы не принято ПО для стройки и реконструкции
-    received_po_build_dataframe = received_po_build_dataframe[[process_columns['id'], process_columns['branch'], process_columns['region'], process_columns['name'], process_columns['program'], process_columns['plan_date']]]
+    received_po_build_dataframe = received_po_build_dataframe[[process_columns['id'],
+                                                               process_columns['region'],
+                                                               process_columns['name'],
+                                                               process_columns['plan_date']]]
     received_po_build_dataframe['БП'] = 'Строительство ВОЛС'
     received_po_reconstruction_dataframe = received_po_reconstruction_dataframe[[process_columns['id'],
-                                                                                 process_columns['branch'],
                                                                                  process_columns['region'],
                                                                                  process_columns['name'],
-                                                                                 process_columns['program'],
                                                                                  process_columns['plan_date']]]
     received_po_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
     # Объединяем не принято в ПО стройки и реконструкции
