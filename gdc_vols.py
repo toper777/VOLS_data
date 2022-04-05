@@ -12,7 +12,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.9"
+    program_version = "0.4.10"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -27,7 +27,8 @@ if __name__ == '__main__':
     last_days_of_month = {}
 
     # Set Russian localization
-    locale.setlocale(locale.LC_TIME, "ru_RU")
+    # locale.setlocale(locale.LC_TIME, "ru_RU")
+    locale.setlocale (locale.LC_ALL, '')
 
     # Excel styles
     fn_bold = Font(bold=True)
