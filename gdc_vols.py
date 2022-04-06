@@ -12,7 +12,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.10"
+    program_version = "0.4.11"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # Set Russian localization
     # locale.setlocale(locale.LC_TIME, "ru_RU")
-    locale.setlocale (locale.LC_ALL, '')
+    locale.setlocale(locale.LC_ALL, '')
 
     # Excel styles
     fn_bold = Font(bold=True)
@@ -542,7 +542,7 @@ if __name__ == '__main__':
                                                                                      process_columns['region'],
                                                                                      process_columns['name'],
                                                                                      process_columns['plan_date']]]
-    current_month_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'  # Добавляем столбец с бизнес-процессом
+    current_month_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'  # Добавляем столбец с названием бизнес-процесса
 
     # Объединяем стройку и реконструкцию
     current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
