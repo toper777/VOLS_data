@@ -6,13 +6,14 @@ import os
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 import openpyxl.styles.borders as borders_style
+
 from vols_functions import *
 
 
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.11"
+    program_version = "0.4.12"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -26,8 +27,7 @@ if __name__ == '__main__':
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     last_days_of_month = {}
 
-    # Set Russian localization
-    # locale.setlocale(locale.LC_TIME, "ru_RU")
+    # Set local localization
     locale.setlocale(locale.LC_ALL, '')
 
     # Excel styles
