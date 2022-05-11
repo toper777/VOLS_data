@@ -9,7 +9,6 @@ import openpyxl.styles.borders as borders_style
 
 from vols_functions import *
 
-
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
@@ -52,7 +51,8 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
-    parser.add_argument("-o", "--report-only", help="Don't get new online data. Generate report only", action='store_true')
+    parser.add_argument("-o", "--report-only", help="Don't get new online data. Generate report only",
+                        action='store_true')
     args = parser.parse_args()
 
     # Год анализа.
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     data_sheets = {'city_main_build': f'Осн. стр. гор.ВОЛС {process_year}',
                    'city_ext_build': f'Доп. стр. гор.ВОЛС {process_year}',
                    'city_reconstruction': f'Реконструкция гор.ВОЛС {process_year}',
-                   'zone_build':  f'Строительство зон.ВОЛС {process_year}',
+                   'zone_build': f'Строительство зон.ВОЛС {process_year}',
                    'zone_reconstruction': f'Реконструкция зон.ВОЛС {process_year}'}
 
     report_sheets = {'report': "Отчетная таблица",
@@ -171,7 +171,8 @@ if __name__ == '__main__':
 
         for sheet, url in urls.items():
             data_frame = read_from_dashboard(url)  # Читаем данные из сети
-            data_frame = data_frame[data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
+            data_frame = data_frame[
+                data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
             data_frame = data_frame.reset_index(drop=True)
             data_frame = convert_date(data_frame, columns_date)  # Переводим дату в формат datetime
             data_frame = convert_int(data_frame, columns_digit)  # Переводим ESUP_ID в числовой формат
@@ -181,11 +182,13 @@ if __name__ == '__main__':
                 # Формируем таблицу основного строительства
                 main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
                 write_dataframe_to_file(main_build_df, file_name, data_sheets['city_main_build'])
-                format_table(main_build_df, data_sheets['city_main_build'], file_name, excel_tables_names, excel_cell_names, table_style)
+                format_table(main_build_df, data_sheets['city_main_build'], file_name, excel_tables_names,
+                             excel_cell_names, table_style)
                 # Формируем таблицу дополнительного строительства
                 ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
                 write_dataframe_to_file(ext_build_df, file_name, data_sheets['city_ext_build'])
-                format_table(ext_build_df, data_sheets['city_ext_build'], file_name, excel_tables_names, excel_cell_names, table_style)
+                format_table(ext_build_df, data_sheets['city_ext_build'], file_name, excel_tables_names,
+                             excel_cell_names, table_style)
             else:
                 write_dataframe_to_file(data_frame, file_name, sheet)
                 format_table(data_frame, sheet, file_name, excel_tables_names, excel_cell_names, table_style)
@@ -399,7 +402,8 @@ if __name__ == '__main__':
     ws['B6'].border = border_medium
     ws['C6'] = sum_done_events(main_build_df, process_columns['ks2_date'],
                                process_columns['commissioning_date'], process_columns['ks2_status'],
-                               process_columns['commissioning_status'], ['Исполнена'], process_month, last_days_of_month)
+                               process_columns['commissioning_status'], ['Исполнена'], process_month,
+                               last_days_of_month)
     ws['C6'].alignment = align_center
     ws['C6'].border = border_medium
     ws['D6'] = ws['C6'].value - ws['B6'].value
@@ -422,19 +426,17 @@ if __name__ == '__main__':
     ws['B26'].border = border_medium
     ws['C26'] = sum_done_events(ext_build_df, process_columns['ks2_date'],
                                 process_columns['commissioning_date'], process_columns['ks2_status'],
-                                process_columns['commissioning_status'], ['Исполнена'], process_month, last_days_of_month)
+                                process_columns['commissioning_status'], ['Исполнена'], process_month,
+                                last_days_of_month)
     ws['C26'].alignment = align_center
     ws['C26'].border = border_medium
     ws['D26'] = ws['C26'].value - ws['B26'].value
     ws['D26'].alignment = align_center
     ws['D26'].border = border_medium
-    ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
-                                                    fill=fill_red))
+    ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
     ws.conditional_formatting.add('D26',
-                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
-                                             fill=fill_green))
-    ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
-                                                    fill=fill_yellow))
+                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+    ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
     for i, process in zip(range(10, 19),
                           ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status',
@@ -446,15 +448,19 @@ if __name__ == '__main__':
         ws[f'C{i}'] = ws[f'B{i}'].value - ws['B2'].value
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
-        ws.conditional_formatting.add(f'C{i}',
-                                      CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green,
-                                                 fill=fill_green))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True,
-                                                          font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
 
-    for i, process in zip(range(30, 39),
-                          ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status',
-                           'tu_status', 'build_status', 'ks2_status', 'commissioning_status']):
+    for i, process in zip(range(30, 39), ['tz_status',
+                                          'send_tz_status',
+                                          'received_tz_status',
+                                          'pir_smr_status',
+                                          'line_scheme_status',
+                                          'tu_status',
+                                          'build_status',
+                                          'ks2_status',
+                                          'commissioning_status',
+                                          ]):
         ws[f'B{i}'] = sum_sort_events(ext_build_df, process_columns[process], ['Исполнена', 'Не требуется'])
         ws[f'B{i}'].alignment = align_center
         ws[f'B{i}'].border = border_medium
@@ -462,11 +468,8 @@ if __name__ == '__main__':
         ws[f'C{i}'] = ws[f'B{i}'].value - ws['B22'].value
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
-        ws.conditional_formatting.add(f'C{i}',
-                                      CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green,
-                                                 fill=fill_green))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True,
-                                                          font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
 
     # Анализ реконструкции ВОЛС
     print(f'Read "{data_sheets["city_reconstruction"]}" sheet from file: "{file_name}"')
@@ -483,25 +486,31 @@ if __name__ == '__main__':
     ws['G6'] = sum_sort_month_events(dashboard_data, process_columns['plan_date'], process_month, last_days_of_month)
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
-    ws['H6'] = sum_done_events(dashboard_data, process_columns['ks2_date2'],
-                               process_columns['commissioning_date2'], process_columns['ks2_status2'],
-                               process_columns['commissioning_status2'], ['Исполнена'], process_month, last_days_of_month)
+    ws['H6'] = sum_done_events(dashboard_data,
+                               process_columns['ks2_date2'],
+                               process_columns['commissioning_date2'],
+                               process_columns['ks2_status2'],
+                               process_columns['commissioning_status2'],
+                               ['Исполнена'],
+                               process_month,
+                               last_days_of_month)
     ws['H6'].alignment = align_center
     ws['H6'].border = border_medium
     ws['I6'] = ws['H6'].value - ws['G6'].value
     ws['I6'].alignment = align_center
     ws['I6'].border = border_medium
-    ws.conditional_formatting.add('I6',
-                                  CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red,
-                                             fill=fill_red))
-    ws.conditional_formatting.add('I6',
-                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
-                                             fill=fill_green))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
-                                                   fill=fill_yellow))
+    ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+    ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
-    for i, process in zip(range(10, 19), ['tz_status2', 'send_tz_status2', 'received_tz_status2', 'pir_smr_status2',
-                                          'line_scheme_status2', 'tu_status2', 'build_status2', 'ks2_status2',
+    for i, process in zip(range(10, 19), ['tz_status2',
+                                          'send_tz_status2',
+                                          'received_tz_status2',
+                                          'pir_smr_status2',
+                                          'line_scheme_status2',
+                                          'tu_status2',
+                                          'build_status2',
+                                          'ks2_status2',
                                           'commissioning_status2']):
         ws[f'G{i}'] = sum_sort_events(dashboard_data, process_columns[process], ['Исполнена', 'Не требуется'])
         ws[f'G{i}'].alignment = align_center
@@ -512,11 +521,8 @@ if __name__ == '__main__':
         # ws[f'H{i}'] = f'=G{i}-G2'
         ws[f'H{i}'].alignment = align_center
         ws[f'H{i}'].border = border_medium
-        ws.conditional_formatting.add(f'H{i}',
-                                      CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green,
-                                                 fill=fill_green))
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True,
-                                                          font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
     ws = adjust_columns_width(ws)
 
     print(f'Write "{report_sheets["report"]}" sheets to file: "{file_name}"')
@@ -526,9 +532,11 @@ if __name__ == '__main__':
 
     # Создание листа Активные мероприятия строительства месяца отчёта
     # маска для текущего месяца
-    curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
+    curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[
+        process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
+    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) \
+                            & (~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_build_dataframe = current_month_build_dataframe[[process_columns['id'],
@@ -538,9 +546,13 @@ if __name__ == '__main__':
     current_month_build_dataframe['БП'] = 'Строительство ВОЛС'
 
     # маска для текущего месяца
-    curr_month_bool_mask = (reconstruction_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d')) & (reconstruction_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
+    curr_month_bool_mask = (reconstruction_dashboard_data[process_columns['plan_date']] <= last_days_of_month[
+        process_month].strftime('%Y-%m-%d')) & (
+                                   reconstruction_dashboard_data[process_columns['plan_date']] >= datetime.datetime(
+                               process_year, process_month, 1).strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~reconstruction_dashboard_data[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) & (~reconstruction_dashboard_data[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
+    curr_status_bool_mask = (~reconstruction_dashboard_data[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) \
+                            & (~reconstruction_dashboard_data[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов реконструкции по маскам
     current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
@@ -551,7 +563,12 @@ if __name__ == '__main__':
 
     # Объединяем стройку и реконструкцию
     current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
-    write_report_table_to_file(current_month_dataframe, file_name, report_sheets['current_month'], excel_tables_names, excel_cell_names, table_style)
+    write_report_table_to_file(
+        current_month_dataframe,
+        file_name,
+        report_sheets['current_month'],
+        excel_tables_names,
+        excel_cell_names, table_style)
 
     # Создание листа Нет ТЗ
     # Формируем таблицы ТЗ для стройки и реконструкции
@@ -582,7 +599,8 @@ if __name__ == '__main__':
                                                                                process_columns['plan_date']]]
     sending_po_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
     # Объединяем передачу ТЗ в ПО стройки и реконструкции
-    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
+    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_reconstruction_dataframe],
+                                     ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
     write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names, excel_cell_names, table_style)
