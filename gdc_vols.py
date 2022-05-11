@@ -78,10 +78,15 @@ if __name__ == '__main__':
         file_name = args.report_file
 
     urls = {
-        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_City_211',
-        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_City',
-        f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Build_Zone',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_{process_year}_FOCL_Common_Rebuild_Zone'}
+        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_'
+                                               f'{process_year}_FOCL_Common_Build_City_211',
+        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_'
+                                                  f'{process_year}_FOCL_Common_Rebuild_City',
+        f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_'
+                                                  f'{process_year}_FOCL_Common_Build_Zone',
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/test-table/vw_'
+                                                  f'{process_year}_FOCL_Common_Rebuild_Zone',
+    }
 
     data_sheets = {'city_main_build': f'Осн. стр. гор.ВОЛС {process_year}',
                    'city_ext_build': f'Доп. стр. гор.ВОЛС {process_year}',
