@@ -1,2 +1,4 @@
 /.mypy_cache/
 /temp.py
+/venv/
+/.idea/
