@@ -9,6 +9,7 @@
   <component name="ChangeListManager">
     <list default="true" id="6f596c73-c9be-4ac5-86ae-57f8d3f861d6" name="Changes" comment="0.4.12 bug fix">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/vols_data.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vols_data.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gdc_vols.py" beforeDir="false" afterPath="$PROJECT_DIR$/gdc_vols.py" afterDir="false" />
@@ -58,17 +59,19 @@
     <option name="showLibraryContents" value="true" />
     <option name="showMembers" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/tikhon.ostapenko/PycharmProjects/vols_data",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "settings.editor.selected.configurable": "preferences.sourceCode"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/dev/vols_data&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.editor&quot;
   }
-}]]></component>
+}</component>
   <component name="PyCoverageOptionsProvider">
     <option name="myUseBundledCoveragePy" value="true" />
   </component>
@@ -220,14 +223,13 @@
       <workItem from="1652254035896" duration="98000" />
       <workItem from="1652254162571" duration="963000" />
       <workItem from="1652255158592" duration="634000" />
-      <workItem from="1652255824616" duration="713000" />
-    </task>
-    <task id="LOCAL-00005" summary="Main tree">
-      <created>1643713863890</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1643713863890</updated>
+      <workItem from="1652255824616" duration="1387000" />
+      <workItem from="1652872843686" duration="1763000" />
+      <workItem from="1652875211584" duration="739000" />
+      <workItem from="1652876405227" duration="523000" />
+      <workItem from="1652877293681" duration="1913000" />
+      <workItem from="1653032148600" duration="1527000" />
+      <workItem from="1653034496576" duration="208000" />
     </task>
     <task id="LOCAL-00006" summary="Main tree">
       <created>1644836190577</created>
@@ -565,7 +567,14 @@
       <option name="project" value="LOCAL" />
       <updated>1652255390573</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="0.4.12 bug fix">
+      <created>1652257068484</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1652257068485</updated>
+    </task>
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
