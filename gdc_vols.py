@@ -12,7 +12,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.12"
+    program_version = "0.4.13"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -377,21 +377,21 @@ if __name__ == '__main__':
 
     # Анализ строительства ВОЛС
     if not args.report_only:
-        dashboard_data = extended_build_df
+        df = extended_build_df
     else:
         print(f'Read "{data_sheets["city_main_build"]}" sheet from file: "{file_name}"')
         df_main_build = pd.read_excel(file_name, sheet_name=data_sheets['city_main_build'])
         print(f'Read "{data_sheets["city_ext_build"]}" sheet from file: "{file_name}"')
         df_ext_build = pd.read_excel(file_name, sheet_name=data_sheets['city_ext_build'])
-        dashboard_data = pd.concat([df_main_build, df_ext_build])
+        df = pd.concat([df_main_build, df_ext_build])
 
-    build_dashboard_data = dashboard_data
-    tz_build_dataframe = dashboard_data[dashboard_data[process_columns['tz_status']] != 'Исполнена']
-    sending_po_build_dataframe = dashboard_data[dashboard_data[process_columns['send_tz_status']] != 'Исполнена']
-    received_po_build_dataframe = dashboard_data[dashboard_data[process_columns['received_tz_status']] != 'Исполнена']
+    build_dashboard_data = df
+    tz_build_dataframe = df[df[process_columns['tz_status']] != 'Исполнена']
+    sending_po_build_dataframe = df[df[process_columns['send_tz_status']] != 'Исполнена']
+    received_po_build_dataframe = df[df[process_columns['received_tz_status']] != 'Исполнена']
 
-    main_build_df = dashboard_data[dashboard_data['KPI ПТР текущего года, км'].notnull()]
-    ext_build_df = dashboard_data[~dashboard_data['KPI ПТР текущего года, км'].notnull()]
+    main_build_df = df[df['KPI ПТР текущего года, км'].notnull()]
+    ext_build_df = df[~df['KPI ПТР текущего года, км'].notnull()]
 
     ws['B2'] = main_build_df[process_columns['plan_date']].count()
     ws['B2'].font = fn_bold
@@ -400,10 +400,11 @@ if __name__ == '__main__':
     ws['B6'] = sum_sort_month_events(main_build_df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
-    ws['C6'] = sum_done_events(main_build_df, process_columns['ks2_date'],
-                               process_columns['commissioning_date'], process_columns['ks2_status'],
-                               process_columns['commissioning_status'], ['Исполнена'], process_month,
-                               last_days_of_month)
+    # ws['C6'] = sum_done_events(main_build_df, process_columns['ks2_date'],
+    #                            process_columns['commissioning_date'], process_columns['ks2_status'],
+    #                            process_columns['commissioning_status'], ['Исполнена'], process_month,
+    #                            last_days_of_month)
+    ws['C6'] = main_build_df[(main_build_df[process_columns['complete_date']] != '') & (main_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
     ws['C6'].alignment = align_center
     ws['C6'].border = border_medium
     ws['D6'] = ws['C6'].value - ws['B6'].value
@@ -424,10 +425,11 @@ if __name__ == '__main__':
     ws['B26'] = sum_sort_month_events(ext_build_df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['B26'].alignment = align_center
     ws['B26'].border = border_medium
-    ws['C26'] = sum_done_events(ext_build_df, process_columns['ks2_date'],
-                                process_columns['commissioning_date'], process_columns['ks2_status'],
-                                process_columns['commissioning_status'], ['Исполнена'], process_month,
-                                last_days_of_month)
+    # ws['C26'] = sum_done_events(ext_build_df, process_columns['ks2_date'],
+    #                             process_columns['commissioning_date'], process_columns['ks2_status'],
+    #                             process_columns['commissioning_status'], ['Исполнена'], process_month,
+    #                             last_days_of_month)
+    ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
     ws['C26'].alignment = align_center
     ws['C26'].border = border_medium
     ws['D26'] = ws['C26'].value - ws['B26'].value
@@ -473,27 +475,28 @@ if __name__ == '__main__':
 
     # Анализ реконструкции ВОЛС
     print(f'Read "{data_sheets["city_reconstruction"]}" sheet from file: "{file_name}"')
-    dashboard_data = pd.read_excel(file_name, sheet_name=data_sheets['city_reconstruction'])
-    reconstruction_dashboard_data = dashboard_data
-    tz_reconstruction_dataframe = dashboard_data[dashboard_data[process_columns['tz_status2']] != 'Исполнена']
-    sending_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_columns['send_tz_status2']] != 'Исполнена']
-    received_po_reconstruction_dataframe = dashboard_data[dashboard_data[process_columns['received_tz_status2']] != 'Исполнена']
+    df = pd.read_excel(file_name, sheet_name=data_sheets['city_reconstruction'])
+    rec_df = df
+    tz_rec_df = df[df[process_columns['tz_status2']] != 'Исполнена']
+    sending_po_rec_df = df[df[process_columns['send_tz_status2']] != 'Исполнена']
+    received_po_rec_df = df[df[process_columns['received_tz_status2']] != 'Исполнена']
 
-    ws['G2'] = dashboard_data[process_columns['plan_date']].count()
+    ws['G2'] = df[process_columns['plan_date']].count()
     ws['G2'].font = fn_bold
     ws['G2'].alignment = align_center
     ws['G2'].border = border_medium
-    ws['G6'] = sum_sort_month_events(dashboard_data, process_columns['plan_date'], process_month, last_days_of_month)
+    ws['G6'] = sum_sort_month_events(df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
-    ws['H6'] = sum_done_events(dashboard_data,
-                               process_columns['ks2_date2'],
-                               process_columns['commissioning_date2'],
-                               process_columns['ks2_status2'],
-                               process_columns['commissioning_status2'],
-                               ['Исполнена'],
-                               process_month,
-                               last_days_of_month)
+    # ws['H6'] = sum_done_events(dashboard_data,
+    #                            process_columns['ks2_date2'],
+    #                            process_columns['commissioning_date2'],
+    #                            process_columns['ks2_status2'],
+    #                            process_columns['commissioning_status2'],
+    #                            ['Исполнена'],
+    #                            process_month,
+    #                            last_days_of_month)
+    ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][process_columns['complete_date2']].count()
     ws['H6'].alignment = align_center
     ws['H6'].border = border_medium
     ws['I6'] = ws['H6'].value - ws['G6'].value
@@ -512,7 +515,7 @@ if __name__ == '__main__':
                                           'build_status2',
                                           'ks2_status2',
                                           'commissioning_status2']):
-        ws[f'G{i}'] = sum_sort_events(dashboard_data, process_columns[process], ['Исполнена', 'Не требуется'])
+        ws[f'G{i}'] = sum_sort_events(df, process_columns[process], ['Исполнена', 'Не требуется'])
         ws[f'G{i}'].alignment = align_center
         ws[f'G{i}'].border = border_medium
         ws[f'G{i}'].border = border_medium
@@ -535,7 +538,8 @@ if __name__ == '__main__':
     curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[
         process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
+    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (
+        ~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_build_dataframe = current_month_build_dataframe[[process_columns['id'],
@@ -545,15 +549,13 @@ if __name__ == '__main__':
     current_month_build_dataframe['БП'] = 'Строительство ВОЛС'
 
     # маска для текущего месяца
-    curr_month_bool_mask = (reconstruction_dashboard_data[process_columns['plan_date']] <= last_days_of_month[
-        process_month].strftime('%Y-%m-%d')) & (
-                                   reconstruction_dashboard_data[process_columns['plan_date']] >= datetime.datetime(
-                               process_year, process_month, 1).strftime('%Y-%m-%d'))
+    curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[
+        process_month].strftime('%Y-%m-%d')) & (rec_df[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~reconstruction_dashboard_data[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) \
-                            & (~reconstruction_dashboard_data[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
+    curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) & (
+        ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов реконструкции по маскам
-    current_month_reconstruction_dataframe = reconstruction_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
+    current_month_reconstruction_dataframe = rec_df[curr_month_bool_mask & curr_status_bool_mask]
     current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
                                                                                      process_columns['region'],
                                                                                      process_columns['name'],
@@ -576,13 +578,13 @@ if __name__ == '__main__':
                                              process_columns['name'],
                                              process_columns['plan_date']]]
     tz_build_dataframe['БП'] = 'Строительство ВОЛС'
-    tz_reconstruction_dataframe = tz_reconstruction_dataframe[[process_columns['id'],
-                                                               process_columns['region'],
-                                                               process_columns['name'],
-                                                               process_columns['plan_date']]]
-    tz_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
+    tz_rec_df = tz_rec_df[[process_columns['id'],
+                           process_columns['region'],
+                           process_columns['name'],
+                           process_columns['plan_date']]]
+    tz_rec_df['БП'] = 'Реконструкция ВОЛС'
     # Объединяем ТЗ стройки и реконструкции
-    tz_dataframe = pd.concat([tz_build_dataframe, tz_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
+    tz_dataframe = pd.concat([tz_build_dataframe, tz_rec_df], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
     write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names, table_style)
 
     # Создание листа Не переданы ТЗ в ПО
@@ -592,13 +594,13 @@ if __name__ == '__main__':
                                                              process_columns['name'],
                                                              process_columns['plan_date']]]
     sending_po_build_dataframe['БП'] = 'Строительство ВОЛС'
-    sending_po_reconstruction_dataframe = sending_po_reconstruction_dataframe[[process_columns['id'],
-                                                                               process_columns['region'],
-                                                                               process_columns['name'],
-                                                                               process_columns['plan_date']]]
-    sending_po_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
+    sending_po_rec_df = sending_po_rec_df[[process_columns['id'],
+                                           process_columns['region'],
+                                           process_columns['name'],
+                                           process_columns['plan_date']]]
+    sending_po_rec_df['БП'] = 'Реконструкция ВОЛС'
     # Объединяем передачу ТЗ в ПО стройки и реконструкции
-    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_reconstruction_dataframe],
+    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_rec_df],
                                      ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
@@ -611,13 +613,13 @@ if __name__ == '__main__':
                                                                process_columns['name'],
                                                                process_columns['plan_date']]]
     received_po_build_dataframe['БП'] = 'Строительство ВОЛС'
-    received_po_reconstruction_dataframe = received_po_reconstruction_dataframe[[process_columns['id'],
-                                                                                 process_columns['region'],
-                                                                                 process_columns['name'],
-                                                                                 process_columns['plan_date']]]
-    received_po_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'
+    received_po_rec_df = received_po_rec_df[[process_columns['id'],
+                                             process_columns['region'],
+                                             process_columns['name'],
+                                             process_columns['plan_date']]]
+    received_po_rec_df['БП'] = 'Реконструкция ВОЛС'
     # Объединяем не принято в ПО стройки и реконструкции
-    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_reconstruction_dataframe], ignore_index=True).reset_index(drop=True)
+    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_rec_df], ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ и не переданные в ПО
     received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
     write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names, excel_cell_names, table_style)
