@@ -3,16 +3,21 @@ import argparse
 import locale
 import os
 
+from loguru import logger
 import openpyxl.styles.borders as borders_style
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 
+from FormattedWorkbook import FormattedWorkbook
 from vols_functions import *
 
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.4.13"
+    program_version = "0.5.1"
+
+    logger.remove()
+    logger.add(sys.stdout, level='INFO')
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -51,8 +56,6 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
-    parser.add_argument("-o", "--report-only", help="Don't get new online data. Generate report only",
-                        action='store_true')
     args = parser.parse_args()
 
     # Год анализа.
@@ -163,42 +166,61 @@ if __name__ == '__main__':
 
     print(f'{program_name}: {program_version}')
 
-    # Получение исходных данных и запись форматированных данных
-    if not args.report_only:
-        if Path(file_name).is_file():
-            print(f'Remove old file {file_name}')
-            os.remove(file_name)
+    wb = FormattedWorkbook(logging_level='INFO')
+    ws_first = wb.active
 
-        for sheet, url in urls.items():
-            data_frame = read_from_dashboard(url)  # Читаем данные из сети
-            data_frame = data_frame[
-                data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
-            data_frame = data_frame.reset_index(drop=True)
-            data_frame = convert_date(data_frame, columns_date)  # Переводим дату в формат datetime
-            data_frame = convert_int(data_frame, columns_digit)  # Переводим ESUP_ID в числовой формат
-            data_frame = data_frame.sort_values(by=columns_for_sort)  # Сортируем по заданному столбцу
-            if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
-                extended_build_df = data_frame.copy(deep=True)  # keep extended data for analyses
-                # Формируем таблицу основного строительства
-                main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
-                write_dataframe_to_file(main_build_df, file_name, data_sheets['city_main_build'])
-                format_table(main_build_df, data_sheets['city_main_build'], file_name, excel_tables_names,
-                             excel_cell_names, table_style)
-                # Формируем таблицу дополнительного строительства
-                ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
-                write_dataframe_to_file(ext_build_df, file_name, data_sheets['city_ext_build'])
-                format_table(ext_build_df, data_sheets['city_ext_build'], file_name, excel_tables_names,
-                             excel_cell_names, table_style)
-            else:
-                write_dataframe_to_file(data_frame, file_name, sheet)
-                format_table(data_frame, sheet, file_name, excel_tables_names, excel_cell_names, table_style)
+    # Получение исходных данных и запись форматированных данных
+    if Path(file_name).is_file():
+        print(f'Remove old file {file_name}')
+        os.remove(file_name)
+
+    for sheet, url in urls.items():
+        data_frame = read_from_dashboard(url)  # Читаем данные из сети
+        data_frame = data_frame[
+            data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
+        data_frame = data_frame.reset_index(drop=True)
+        data_frame = convert_date(data_frame, columns_date)  # Переводим дату в формат datetime
+        data_frame = convert_int(data_frame, columns_digit)  # Переводим ESUP_ID в числовой формат
+        data_frame = data_frame.sort_values(by=columns_for_sort)  # Сортируем по заданному столбцу
+        if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
+            extended_build_df = data_frame.copy(deep=True)  # keep extended data for analyses
+            # Формируем таблицу основного строительства
+            main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
+            # write_dataframe_to_file(main_build_df, file_name, data_sheets['city_main_build'])
+            # format_table(main_build_df, data_sheets['city_main_build'], file_name, excel_tables_names,
+            #              excel_cell_names, table_style)
+            wb.excel_format_table(
+                main_build_df,
+                data_sheets['city_main_build'],
+                excel_tables_names[data_sheets['city_main_build']],
+            )
+            # Формируем таблицу дополнительного строительства
+            ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
+            # write_dataframe_to_file(ext_build_df, file_name, data_sheets['city_ext_build'])
+            # format_table(ext_build_df, data_sheets['city_ext_build'], file_name, excel_tables_names,
+            #              excel_cell_names, table_style)
+            wb.excel_format_table(
+                ext_build_df,
+                data_sheets['city_ext_build'],
+                excel_tables_names[data_sheets['city_ext_build']],
+            )
+        else:
+            if sheet == f'Реконструкция гор.ВОЛС {process_year}':
+                rec_df_ = data_frame
+            # write_dataframe_to_file(data_frame, file_name, sheet)
+            # format_table(data_frame, sheet, file_name, excel_tables_names, excel_cell_names, table_style)
+            wb.excel_format_table(
+                data_frame,
+                sheet,
+                excel_tables_names[sheet],
+            )
 
     # Создание отчёта
     print(f'Generate report sheet: "{report_sheets["report"]}"')
     for i in range(1, 13):
         last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
 
-    wb = openpyxl.load_workbook(filename=file_name)
+    # wb = openpyxl.load_workbook(filename=file_name)
     try:
         ws = wb[report_sheets['report']]
     except Exception:
@@ -376,15 +398,7 @@ if __name__ == '__main__':
     ws['I5'].border = border_medium
 
     # Анализ строительства ВОЛС
-    if not args.report_only:
-        df = extended_build_df
-    else:
-        print(f'Read "{data_sheets["city_main_build"]}" sheet from file: "{file_name}"')
-        df_main_build = pd.read_excel(file_name, sheet_name=data_sheets['city_main_build'])
-        print(f'Read "{data_sheets["city_ext_build"]}" sheet from file: "{file_name}"')
-        df_ext_build = pd.read_excel(file_name, sheet_name=data_sheets['city_ext_build'])
-        df = pd.concat([df_main_build, df_ext_build])
-
+    df = extended_build_df
     build_dashboard_data = df
     tz_build_dataframe = df[df[process_columns['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = df[df[process_columns['send_tz_status']] != 'Исполнена']
@@ -404,7 +418,9 @@ if __name__ == '__main__':
     #                            process_columns['commissioning_date'], process_columns['ks2_status'],
     #                            process_columns['commissioning_status'], ['Исполнена'], process_month,
     #                            last_days_of_month)
-    ws['C6'] = main_build_df[(main_build_df[process_columns['complete_date']] != '') & (main_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
+    ws['C6'] = main_build_df[(main_build_df[process_columns['complete_date']] != '') & (
+            main_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][
+        process_columns['complete_date']].count()
     ws['C6'].alignment = align_center
     ws['C6'].border = border_medium
     ws['D6'] = ws['C6'].value - ws['B6'].value
@@ -429,16 +445,21 @@ if __name__ == '__main__':
     #                             process_columns['commissioning_date'], process_columns['ks2_status'],
     #                             process_columns['commissioning_status'], ['Исполнена'], process_month,
     #                             last_days_of_month)
-    ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
+    ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (
+            ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][
+        process_columns['complete_date']].count()
     ws['C26'].alignment = align_center
     ws['C26'].border = border_medium
     ws['D26'] = ws['C26'].value - ws['B26'].value
     ws['D26'].alignment = align_center
     ws['D26'].border = border_medium
-    ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+    ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                    fill=fill_red))
     ws.conditional_formatting.add('D26',
-                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-    ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
+                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
+                                             fill=fill_green))
+    ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
+                                                    fill=fill_yellow))
 
     for i, process in zip(range(10, 19),
                           ['tz_status', 'send_tz_status', 'received_tz_status', 'pir_smr_status', 'line_scheme_status',
@@ -450,8 +471,11 @@ if __name__ == '__main__':
         ws[f'C{i}'] = ws[f'B{i}'].value - ws['B2'].value
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True,
+                                                          font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}',
+                                      CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                 fill=fill_red))
 
     for i, process in zip(range(30, 39), ['tz_status',
                                           'send_tz_status',
@@ -470,12 +494,14 @@ if __name__ == '__main__':
         ws[f'C{i}'] = ws[f'B{i}'].value - ws['B22'].value
         ws[f'C{i}'].alignment = align_center
         ws[f'C{i}'].border = border_medium
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True,
+                                                          font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}',
+                                      CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                 fill=fill_red))
 
     # Анализ реконструкции ВОЛС
-    print(f'Read "{data_sheets["city_reconstruction"]}" sheet from file: "{file_name}"')
-    df = pd.read_excel(file_name, sheet_name=data_sheets['city_reconstruction'])
+    df = rec_df_
     rec_df = df
     tz_rec_df = df[df[process_columns['tz_status2']] != 'Исполнена']
     sending_po_rec_df = df[df[process_columns['send_tz_status2']] != 'Исполнена']
@@ -496,15 +522,22 @@ if __name__ == '__main__':
     #                            ['Исполнена'],
     #                            process_month,
     #                            last_days_of_month)
-    ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][process_columns['complete_date2']].count()
+    ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (
+            rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][
+        process_columns['complete_date2']].count()
     ws['H6'].alignment = align_center
     ws['H6'].border = border_medium
     ws['I6'] = ws['H6'].value - ws['G6'].value
     ws['I6'].alignment = align_center
     ws['I6'].border = border_medium
-    ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
+    ws.conditional_formatting.add('I6',
+                                  CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red,
+                                             fill=fill_red))
+    ws.conditional_formatting.add('I6',
+                                  CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green,
+                                             fill=fill_green))
+    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag,
+                                                   fill=fill_yellow))
 
     for i, process in zip(range(10, 19), ['tz_status2',
                                           'send_tz_status2',
@@ -524,8 +557,11 @@ if __name__ == '__main__':
         # ws[f'H{i}'] = f'=G{i}-G2'
         ws[f'H{i}'].alignment = align_center
         ws[f'H{i}'].border = border_medium
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True,
+                                                          font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'H{i}',
+                                      CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red,
+                                                 fill=fill_red))
     ws = adjust_columns_width(ws)
 
     print(f'Write "{report_sheets["report"]}" sheets to file: "{file_name}"')
@@ -536,10 +572,13 @@ if __name__ == '__main__':
     # Создание листа Активные мероприятия строительства месяца отчёта
     # маска для текущего месяца
     curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[
-        process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
+        process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns['plan_date']] >= datetime.datetime(
+        process_year, process_month, 1).strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (
-        ~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
+    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains(
+        'Исполнена|Не требуется', regex=True)) & (
+                                ~build_dashboard_data[process_columns['ks2_status']].str.contains(
+                                    'Исполнена|Не требуется', regex=True))
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_build_dataframe = current_month_build_dataframe[[process_columns['id'],
@@ -550,10 +589,15 @@ if __name__ == '__main__':
 
     # маска для текущего месяца
     curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[
-        process_month].strftime('%Y-%m-%d')) & (rec_df[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
+        process_month].strftime('%Y-%m-%d')) & (rec_df[process_columns['plan_date']] >= datetime.datetime(process_year,
+                                                                                                          process_month,
+                                                                                                          1).strftime(
+        '%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) & (
-        ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
+    curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется',
+                                                                                            regex=True)) & (
+                                ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется',
+                                                                                     regex=True))
     # Выборка объектов реконструкции по маскам
     current_month_reconstruction_dataframe = rec_df[curr_month_bool_mask & curr_status_bool_mask]
     current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
@@ -563,13 +607,16 @@ if __name__ == '__main__':
     current_month_reconstruction_dataframe['БП'] = 'Реконструкция ВОЛС'  # Добавляем столбец с названием бизнес-процесса
 
     # Объединяем стройку и реконструкцию
-    current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
-    write_report_table_to_file(
-        current_month_dataframe,
-        file_name,
-        report_sheets['current_month'],
-        excel_tables_names,
-        excel_cell_names, table_style)
+    current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe],
+                                        ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
+    # write_report_table_to_file(
+    #     current_month_dataframe,
+    #     file_name,
+    #     report_sheets['current_month'],
+    #     excel_tables_names,
+    #     excel_cell_names, table_style)
+    wb.excel_format_table(
+        current_month_dataframe, report_sheets['current_month'], excel_tables_names[report_sheets['current_month']])
 
     # Создание листа Нет ТЗ
     # Формируем таблицы ТЗ для стройки и реконструкции
@@ -584,8 +631,12 @@ if __name__ == '__main__':
                            process_columns['plan_date']]]
     tz_rec_df['БП'] = 'Реконструкция ВОЛС'
     # Объединяем ТЗ стройки и реконструкции
-    tz_dataframe = pd.concat([tz_build_dataframe, tz_rec_df], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
-    write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names, table_style)
+    tz_dataframe = pd.concat([tz_build_dataframe, tz_rec_df], ignore_index=True).reset_index(drop=True).sort_values(
+        by=columns_for_sort)
+    # write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names,
+    #                            table_style)
+    wb.excel_format_table(
+        tz_dataframe, report_sheets['tz'], excel_tables_names[report_sheets['tz']])
 
     # Создание листа Не переданы ТЗ в ПО
     # Формируем таблицы передачи в ПО для стройки и реконструкции
@@ -603,8 +654,12 @@ if __name__ == '__main__':
     sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_rec_df],
                                      ignore_index=True).reset_index(drop=True)
     # Убираем мероприятия с не выданными ТЗ
-    sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
-    write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names, excel_cell_names, table_style)
+    sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(
+        keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
+    # write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names,
+    #                            excel_cell_names, table_style)
+    wb.excel_format_table(
+        sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
     # Создание листа ТЗ не принято ПО
     # Формируем таблицы не принято ПО для стройки и реконструкции
@@ -619,7 +674,18 @@ if __name__ == '__main__':
                                              process_columns['plan_date']]]
     received_po_rec_df['БП'] = 'Реконструкция ВОЛС'
     # Объединяем не принято в ПО стройки и реконструкции
-    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_rec_df], ignore_index=True).reset_index(drop=True)
+    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_rec_df], ignore_index=True).reset_index(
+        drop=True)
     # Убираем мероприятия с не выданными ТЗ и не переданные в ПО
-    received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
-    write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names, excel_cell_names, table_style)
+    received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe],
+                                      ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(
+        by=columns_for_sort)
+    # write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names,
+    #                            excel_cell_names, table_style)
+    wb.excel_format_table(
+        received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
+
+    logger.info(f'Удаляем лист {ws_first}')
+    wb.remove(ws_first)
+    print(f'Save formatted data fo {file_name}')
+    wb.save(file_name)
