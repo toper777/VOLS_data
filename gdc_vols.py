@@ -3,8 +3,8 @@ import argparse
 import locale
 import os
 
-from loguru import logger
 import openpyxl.styles.borders as borders_style
+from loguru import logger
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 
@@ -414,10 +414,6 @@ if __name__ == '__main__':
     ws['B6'] = sum_sort_month_events(main_build_df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
-    # ws['C6'] = sum_done_events(main_build_df, process_columns['ks2_date'],
-    #                            process_columns['commissioning_date'], process_columns['ks2_status'],
-    #                            process_columns['commissioning_status'], ['Исполнена'], process_month,
-    #                            last_days_of_month)
     ws['C6'] = main_build_df[(main_build_df[process_columns['complete_date']] != '') & (
             main_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][
         process_columns['complete_date']].count()
@@ -441,10 +437,6 @@ if __name__ == '__main__':
     ws['B26'] = sum_sort_month_events(ext_build_df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['B26'].alignment = align_center
     ws['B26'].border = border_medium
-    # ws['C26'] = sum_done_events(ext_build_df, process_columns['ks2_date'],
-    #                             process_columns['commissioning_date'], process_columns['ks2_status'],
-    #                             process_columns['commissioning_status'], ['Исполнена'], process_month,
-    #                             last_days_of_month)
     ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (
             ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][
         process_columns['complete_date']].count()
@@ -514,14 +506,6 @@ if __name__ == '__main__':
     ws['G6'] = sum_sort_month_events(df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
-    # ws['H6'] = sum_done_events(dashboard_data,
-    #                            process_columns['ks2_date2'],
-    #                            process_columns['commissioning_date2'],
-    #                            process_columns['ks2_status2'],
-    #                            process_columns['commissioning_status2'],
-    #                            ['Исполнена'],
-    #                            process_month,
-    #                            last_days_of_month)
     ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (
             rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][
         process_columns['complete_date2']].count()
