@@ -14,7 +14,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.2"
+    program_version = "0.5.3"
 
     logger.remove()
     logger.add(sys.stdout, level='INFO')
@@ -56,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
+    parser.add_argument("--old-algorithm", action='store_true', help="Использовать алгоритм подсчета по КС-2 и вводу в эксплуатацию")
     args = parser.parse_args()
 
     # Год анализа.
@@ -417,10 +418,19 @@ if __name__ == '__main__':
     ws['B6'] = sum_sort_month_events(main_build_df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
-    ws['C6'] = main_build_df[(main_build_df[process_columns['complete_date']] != '') & (
-            main_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
-    ws['C6'].alignment = align_center
-    ws['C6'].border = border_medium
+
+    if args.old_algorithm:
+        ws['C6'] = main_build_df[(main_build_df[process_columns['commissioning_date']] != '') & (
+                main_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (main_build_df[process_columns['ks2_date']] != '') & (
+                                         main_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][process_columns['commissioning_date']].count()
+        ws['C6'].alignment = align_center
+        ws['C6'].border = border_medium
+    else:
+        ws['C6'] = main_build_df[(main_build_df[process_columns['complete_date']] != '') & (
+                main_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
+        ws['C6'].alignment = align_center
+        ws['C6'].border = border_medium
+
     ws['D6'] = ws['C6'].value - ws['B6'].value
     ws['D6'].alignment = align_center
     ws['D6'].border = border_medium
@@ -500,10 +510,18 @@ if __name__ == '__main__':
     ws['G6'] = sum_sort_month_events(df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
-    ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][
-        process_columns['complete_date2']].count()
-    ws['H6'].alignment = align_center
-    ws['H6'].border = border_medium
+    if args.old_algorithm:
+        ws['H6'] = rec_df[(rec_df[process_columns['commissioning_date2']] != '') & (
+                rec_df[process_columns['commissioning_date2']] <= last_days_of_month[process_month]) & (rec_df[process_columns['ks2_date2']] != '') & (
+                                  rec_df[process_columns['ks2_date2']] <= last_days_of_month[process_month])][process_columns['commissioning_date2']].count()
+        ws['H6'].alignment = align_center
+        ws['H6'].border = border_medium
+    else:
+        ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][
+            process_columns['complete_date2']].count()
+        ws['H6'].alignment = align_center
+        ws['H6'].border = border_medium
+
     ws['I6'] = ws['H6'].value - ws['G6'].value
     ws['I6'].alignment = align_center
     ws['I6'].border = border_medium
