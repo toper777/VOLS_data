@@ -16,9 +16,6 @@ if __name__ == '__main__':
     program_name = "gdc_vols"
     program_version = "0.5.3"
 
-    logger.remove()
-    logger.add(sys.stdout, level='INFO')
-
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
     # Наименования колонок для преобразования даты
@@ -52,12 +49,25 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description=f'{program_name} v.{program_version}')
+    parser.add_argument("-v", "--verbose", type=int, help="Уровень отладки: 0 - CRITICAL, 1 - ERROR, 2 - INFO, 3 - DEBUG")
     parser.add_argument("-y", "--year", type=int, help="year for processing")
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
     parser.add_argument("--old-algorithm", action='store_true', help="Использовать алгоритм подсчета по КС-2 и вводу в эксплуатацию")
     args = parser.parse_args()
+
+    # Уровень отладочных сообщений
+    if args.verbose is None or args.verbose == 1:
+        logger_level = 'ERROR'
+    elif args.verbose == 0:
+        logger_level = 'CRITICAL'
+    elif args.verbose == 2:
+        logger_level = 'INFO'
+    else:
+        logger_level = 'DEBUG'
+    logger.remove()
+    logger.add(sys.stdout, level=logger_level)
 
     # Год анализа.
     if args.year is None:
@@ -167,7 +177,7 @@ if __name__ == '__main__':
 
     print(f'{program_name}: {program_version}')
 
-    wb = FormattedWorkbook(logging_level='INFO')
+    wb = FormattedWorkbook(logging_level=logger_level)
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
