@@ -4,3 +4,6 @@
 /.idea/
 /gdc_vols.spec
 /build/
+/vdi_venv/Scripts/python.exe
+/vdi_venv/Scripts/pythonw.exe
+/vdi_venv/pyvenv.cfg
