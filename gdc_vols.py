@@ -14,7 +14,7 @@ from vols_functions import *
 if __name__ == '__main__':
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.4"
+    program_version = "0.5.5"
 
     # Стиль таблицы Excel
     table_style = "TableStyleMedium2"
@@ -562,8 +562,6 @@ if __name__ == '__main__':
 
     # Создание листа Активные мероприятия строительства месяца отчёта
     # маска для текущего месяца
-    # curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[
-    #     process_month].strftime('%Y-%m-%d')) & (build_dashboard_data[process_columns['plan_date']] >= datetime.datetime(process_year, process_month, 1).strftime('%Y-%m-%d'))
     curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
     curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (
@@ -577,8 +575,6 @@ if __name__ == '__main__':
     current_month_build_dataframe['БП'] = 'Строительство ВОЛС'
 
     # маска для текущего месяца
-    # curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[
-    #     process_month].strftime('%Y-%m-%d')) & (rec_df[process_columns['plan_date']] >= datetime.datetime(process_year, process_month,1).strftime('%Y-%m-%d'))
     curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
     curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) & (

@@ -1,6 +1,8 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import sys
 from pathlib import Path
+
+from loguru import logger
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 import datetime
@@ -75,8 +77,8 @@ def read_from_dashboard(_url):
     print(f'Read data from: "{_url}"')
     try:
         _dashboard_data = pd.read_json(_url, convert_dates=('дата', 'Дата'))
-    except Exception:
-        print(f"ERROR: can't read data from url {_url}")
+    except Exception as e:
+        print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(1)
     return _dashboard_data
 
@@ -100,38 +102,6 @@ def write_dataframe_to_file(_data_frame, _file_name, _sheet):
             print(
                 f'Write "{_sheet}" sheet to new file: "{_file_name}"')
             _data_frame.to_excel(writer, sheet_name=_sheet, index=False)
-
-
-def format_table(_data_frame, _sheet, _file_name, _tables_names, _excel_cell_names, _table_style):
-    """
-    Форматирует таблицы для Excel файла и перезаписывает в файл в виде именованных Таблиц
-
-    :param _table_style:
-    :param _excel_cell_names:
-    :param _data_frame:
-    :param _sheet:
-    :param _file_name:
-    :param _tables_names:
-    """
-    if not _data_frame.empty:
-        print(
-            f'Read "{_sheet}" sheet from file: "{_file_name}"')
-        _wb = openpyxl.load_workbook(filename=_file_name)
-        tab = Table(displayName=_tables_names[_sheet],
-                    ref=f'A1:{_excel_cell_names[len(_data_frame.columns)]}{len(_data_frame) + 1}')
-        style = TableStyleInfo(name=_table_style, showRowStripes=True, showColumnStripes=True)
-        tab.tableStyleInfo = style
-        _wb[_sheet].add_table(tab)
-        try:
-            _ws = _wb[_sheet]
-        except Exception:
-            _ws = _wb.create_sheet(title=_sheet)
-        _ws = adjust_columns_width(_ws)
-        print(
-            f'Write formatted "{_sheet}" sheet to file: "{_file_name}"')
-        _wb.save(_file_name)
-    else:
-        pass
 
 
 def convert_date(_data_frame, _columns):
@@ -203,11 +173,6 @@ def sum_sort_month_events(_data_frame, _column, _month, _last_days_of_month):
     return _sum_sort
 
 
-def write_report_table_to_file(_data_frame, _file_name, _sheet, _excel_tables_names, _excel_cell_names, _table_style):
-    write_dataframe_to_file(_data_frame, _file_name, _sheet)
-    format_table(_data_frame, _sheet, _file_name, _excel_tables_names, _excel_cell_names, _table_style)
-
-
 def adjust_columns_width(_dataframe):
     # Форматирование ширины полей отчётной таблицы
     for _col in _dataframe.columns:
@@ -219,7 +184,8 @@ def adjust_columns_width(_dataframe):
             try:  # Necessary to avoid error on empty cells
                 if len(str(_cell.value)) > _max_length:
                     _max_length = len(str(_cell.value))
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Empty cell. Error text: {e}")
                 pass
         _adjusted_width = _max_length + 3
         _dataframe.column_dimensions[_column].width = _adjusted_width
