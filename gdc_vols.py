@@ -14,7 +14,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.6"
+    program_version = "0.5.7"
 
     # Константы
     BP = 'БП'
@@ -115,8 +115,8 @@ def main():
         'tz': 'Нет ТЗ',
         'sending_po': "Нет передачи ТЗ",
         'received_po': 'Не приняты ТЗ',
-        'soc_build': 'Соц.соревнование стр.',
-        'soc_rec': 'Соц. соревнование рек.',
+        'soc_build': 'Соц.соревнование. Стр.',
+        'soc_rec': 'Соц. соревнование. Рек.',
     }
 
     excel_tables_names = {
@@ -197,8 +197,12 @@ def main():
 
     # Получение исходных данных и запись форматированных данных
     if Path(file_name).is_file():
-        print(f'Remove old file {file_name}')
-        os.remove(file_name)
+        try:
+            os.remove(file_name)
+            print(f'Remove old file {Color.GREEN}"{file_name}"{Color.END}')
+        except Exception as ex:
+            logger.error(f'Ошибка удаления файла: {ex}')
+            sys.exit(1)
 
     for sheet, url in urls.items():
         data_frame = read_from_dashboard(url)  # Читаем данные из сети
@@ -213,6 +217,7 @@ def main():
             # Формируем таблицу основного строительства
             main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
             if not main_build_df.empty:
+                print(f'Generate sheet: {Color.GREEN}"{data_sheets["city_main_build"]}"{Color.END}')
                 wb.excel_format_table(
                     main_build_df,
                     data_sheets['city_main_build'],
@@ -221,6 +226,7 @@ def main():
             # Формируем таблицу дополнительного строительства
             ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
             if not ext_build_df.empty:
+                print(f'Generate sheet: {Color.GREEN}"{data_sheets["city_ext_build"]}"{Color.END}')
                 wb.excel_format_table(
                     ext_build_df,
                     data_sheets['city_ext_build'],
@@ -230,6 +236,7 @@ def main():
             if sheet == f'Реконструкция гор.ВОЛС {process_year}':
                 rec_df_ = data_frame
             if not data_frame.empty:
+                print(f'Generate sheet: {Color.GREEN}"{sheet}"{Color.END}')
                 wb.excel_format_table(
                     data_frame,
                     sheet,
@@ -237,7 +244,7 @@ def main():
                 )
 
     # Создание отчёта
-    print(f'Generate report sheet: "{report_sheets["report"]}"')
+    print(f'Generate report sheet: {Color.GREEN}"{report_sheets["report"]}"{Color.END}')
     for i in range(1, 13):
         last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
     try:
@@ -433,7 +440,7 @@ def main():
     ws['B2'].border = border_medium
     # ws['B6'] = sum_sort_month_events(main_build_df, process_columns['plan_date'], process_month, last_days_of_month)
     ws['B6'] = main_build_df[(main_build_df[process_columns['plan_date']] != '') & (
-                main_build_df[process_columns['plan_date']] <= last_days_of_month[process_month])][process_columns['plan_date']].count()
+            main_build_df[process_columns['plan_date']] <= last_days_of_month[process_month])][process_columns['plan_date']].count()
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
 
@@ -460,13 +467,23 @@ def main():
     ws['B22'].font = fn_bold
     ws['B22'].alignment = align_center
     ws['B22'].border = border_medium
-    ws['B26'] = sum_sort_month_events(ext_build_df, process_columns['plan_date'], process_month, last_days_of_month)
+    # ws['B26'] = sum_sort_month_events(ext_build_df, process_columns['plan_date'], process_month, last_days_of_month)
+    ws['B26'] = ext_build_df[(ext_build_df[process_columns['plan_date']] != '') & (
+            ext_build_df[process_columns['plan_date']] <= last_days_of_month[process_month])][process_columns['plan_date']].count()
     ws['B26'].alignment = align_center
     ws['B26'].border = border_medium
-    ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (
-            ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
-    ws['C26'].alignment = align_center
-    ws['C26'].border = border_medium
+    if args.old_algorithm:
+        ws['C26'] = ext_build_df[
+            (ext_build_df[process_columns['commissioning_date']] != '') & (ext_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (
+                        ext_build_df[process_columns['ks2_date']] != '') & (ext_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][
+            process_columns['commissioning_date']].count()
+        ws['C26'].alignment = align_center
+        ws['C26'].border = border_medium
+    else:
+        ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (
+                ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
+        ws['C26'].alignment = align_center
+        ws['C26'].border = border_medium
     ws['D26'] = ws['C26'].value - ws['B26'].value
     ws['D26'].alignment = align_center
     ws['D26'].border = border_medium
@@ -525,7 +542,9 @@ def main():
     ws['G2'].font = fn_bold
     ws['G2'].alignment = align_center
     ws['G2'].border = border_medium
-    ws['G6'] = sum_sort_month_events(df, process_columns['plan_date'], process_month, last_days_of_month)
+    # ws['G6'] = sum_sort_month_events(df, process_columns['plan_date'], process_month, last_days_of_month)
+    ws['G6'] = rec_df[(rec_df[process_columns['plan_date']] != '') & (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month])][
+        process_columns['plan_date']].count()
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
     if args.old_algorithm:
@@ -602,6 +621,7 @@ def main():
     current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(
         by=columns_for_sort)
     if not current_month_dataframe.empty:
+        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["current_month"]}"{Color.END}')
         wb.excel_format_table(current_month_dataframe, report_sheets['current_month'], excel_tables_names[report_sheets['current_month']])
 
     # Создание листа Нет ТЗ
@@ -622,6 +642,7 @@ def main():
     # write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names,
     #                            table_style)
     if not tz_dataframe.empty:
+        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["tz"]}"{Color.END}')
         wb.excel_format_table(tz_dataframe, report_sheets['tz'], excel_tables_names[report_sheets['tz']])
 
     # Создание листа Не переданы ТЗ в ПО
@@ -644,6 +665,7 @@ def main():
     # write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names,
     #                            excel_cell_names, table_style)
     if not sending_po_dataframe.empty:
+        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["sending_po"]}"{Color.END}')
         wb.excel_format_table(sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
     # Создание листа ТЗ не принято ПО
@@ -668,6 +690,7 @@ def main():
     # write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names,
     #                            excel_cell_names, table_style)
     if not received_po_dataframe.empty:
+        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
     #
@@ -697,7 +720,6 @@ def main():
     soc_df_plan_rec = soc_df_rec[mask_soc_plan_rec]
     soc_df_done_rec = soc_df_rec[mask_soc_done_rec]
 
-
     soc_report_plan_build = soc_df_plan_build.groupby([process_columns['region']]).agg(
         {
             process_columns['plan_date']: 'count',
@@ -714,6 +736,7 @@ def main():
     logger.debug(f'{soc_report_build = }')
 
     if not soc_report_build.empty:
+        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_build"]}"{Color.END}')
         wb.excel_format_table(soc_report_build, report_sheets['soc_build'], excel_tables_names[report_sheets['soc_build']])
 
     soc_report_plan_rec = soc_df_plan_rec.groupby([process_columns['region']]).agg(
@@ -732,6 +755,7 @@ def main():
     logger.debug(f'{soc_report_rec = }')
 
     if not soc_report_rec.empty:
+        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_rec"]}"{Color.END}')
         wb.excel_format_table(soc_report_rec, report_sheets['soc_rec'], excel_tables_names[report_sheets['soc_rec']])
 
     #
@@ -739,7 +763,7 @@ def main():
     #
     logger.info(f'Удаляем лист {ws_first}')
     wb.remove(ws_first)
-    print(f'Save formatted data fo {file_name}')
+    print(f'Save formatted data fo file {Color.GREEN}"{file_name}"{Color.END}')
     wb.save(file_name)
 
 
