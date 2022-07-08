@@ -189,6 +189,10 @@ def main():
     rename_columns = {
         process_columns['complete_date2']: process_columns['complete_date'],
     }
+    soc_rename_columns = {
+        process_columns['plan_date']: 'План',
+        process_columns['complete_date']: 'Факт',
+    }
 
     print(f'{program_name}: {program_version}')
 
@@ -730,7 +734,7 @@ def main():
             process_columns['complete_date']: 'count',
         }
     ).reset_index()
-    soc_report_build = pd.merge(soc_report_plan_build, soc_report_done_build, how='outer').fillna(value=0).sort_values(by=process_columns['region'])
+    soc_report_build = pd.merge(soc_report_plan_build, soc_report_done_build, how='outer').fillna(value=0).sort_values(by=process_columns['region']).rename(columns=soc_rename_columns)
     logger.debug(f'{soc_report_plan_build = }')
     logger.debug(f'{soc_report_done_build = }')
     logger.debug(f'{soc_report_build = }')
@@ -749,7 +753,7 @@ def main():
             process_columns['complete_date']: 'count',
         }
     ).reset_index()
-    soc_report_rec = pd.merge(soc_report_plan_rec, soc_report_done_rec, how='outer').fillna(value=0).sort_values(by=process_columns['region'])
+    soc_report_rec = pd.merge(soc_report_plan_rec, soc_report_done_rec, how='outer').fillna(value=0).sort_values(by=process_columns['region']).rename(columns=soc_rename_columns)
     logger.debug(f'{soc_report_plan_rec = }')
     logger.debug(f'{soc_report_done_rec = }')
     logger.debug(f'{soc_report_rec = }')
