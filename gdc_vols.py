@@ -712,23 +712,27 @@ def main():
                           ]].copy().rename(columns=rename_columns)
     soc_df_rec[BP] = BP_RECON
 
-    # soc_df = pd.concat([soc_df_build, soc_df_rec], ignore_index=True)  # .reset_index(drop=True)
-
+    #
+    # Маски для соц соревнования
+    #
     mask_soc_plan_build = (soc_df_build[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
     mask_soc_done_build = (soc_df_build[process_columns['complete_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
     mask_soc_plan_rec = (soc_df_rec[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
     mask_soc_done_rec = (soc_df_rec[process_columns['complete_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
 
+    # Формируем датасеты для соц. соревнования
     soc_df_plan_build = soc_df_build[mask_soc_plan_build]
     soc_df_done_build = soc_df_build[mask_soc_done_build]
     soc_df_plan_rec = soc_df_rec[mask_soc_plan_rec]
     soc_df_done_rec = soc_df_rec[mask_soc_done_rec]
 
+    # Считаем мероприятия плана
     soc_report_plan_build = soc_df_plan_build.groupby([process_columns['region']]).agg(
         {
             process_columns['plan_date']: 'count',
         }
     ).reset_index()
+    # Считаем мероприятия факта
     soc_report_done_build = soc_df_done_build.groupby([process_columns['region']]).agg(
         {
             process_columns['complete_date']: 'count',
@@ -743,11 +747,13 @@ def main():
         print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_build"]}"{Color.END}')
         wb.excel_format_table(soc_report_build, report_sheets['soc_build'], excel_tables_names[report_sheets['soc_build']])
 
+    # Считаем мероприятия плана
     soc_report_plan_rec = soc_df_plan_rec.groupby([process_columns['region']]).agg(
         {
             process_columns['plan_date']: 'count',
         }
     ).reset_index()
+    # Считаем мероприятия факта
     soc_report_done_rec = soc_df_done_rec.groupby([process_columns['region']]).agg(
         {
             process_columns['complete_date']: 'count',
