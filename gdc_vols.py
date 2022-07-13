@@ -14,7 +14,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.7"
+    program_version = "0.5.8"
 
     # Константы
     BP = 'БП'
@@ -58,6 +58,7 @@ def main():
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
     parser.add_argument("--old-algorithm", action='store_true', help="Использовать алгоритм подсчета по КС-2 и вводу в эксплуатацию")
+    parser.add_argument("--soc-report", action='store_true', help="Добавить в отчет страницы Соц. соревнования")
     args = parser.parse_args()
 
     # Уровень отладочных сообщений
@@ -673,6 +674,7 @@ def main():
         wb.excel_format_table(sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
     # Создание листа ТЗ не принято ПО
+    #
     # Формируем таблицы не принято ПО для стройки и реконструкции
     #
     received_po_build_dataframe = received_po_build_dataframe[[process_columns['id'],
@@ -697,76 +699,79 @@ def main():
         print(f'Generate report sheet: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
-    #
-    # Формируем листы соцсоревнования
-    #
-    soc_df_build = extended_build_df[[process_columns['region'],
-                                      process_columns['plan_date'],
-                                      process_columns['complete_date']
-                                      ]].copy()
-    soc_df_build[BP] = BP_BUILD
+    if args.soc_report:
+        #
+        # Формируем листы соцсоревнования
+        #
+        soc_df_build = extended_build_df[[process_columns['region'],
+                                          process_columns['plan_date'],
+                                          process_columns['complete_date']
+                                          ]].copy()
+        soc_df_build[BP] = BP_BUILD
 
-    soc_df_rec = rec_df_[[process_columns['region'],
-                          process_columns['plan_date'],
-                          process_columns['complete_date2']
-                          ]].copy().rename(columns=rename_columns)
-    soc_df_rec[BP] = BP_RECON
+        soc_df_rec = rec_df_[[process_columns['region'],
+                              process_columns['plan_date'],
+                              process_columns['complete_date2']
+                              ]].copy().rename(columns=rename_columns)
+        soc_df_rec[BP] = BP_RECON
 
-    #
-    # Маски для соц соревнования
-    #
-    mask_soc_plan_build = (soc_df_build[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
-    mask_soc_done_build = (soc_df_build[process_columns['complete_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
-    mask_soc_plan_rec = (soc_df_rec[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
-    mask_soc_done_rec = (soc_df_rec[process_columns['complete_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+        #
+        # Маски для соц соревнования
+        #
+        mask_soc_plan_build = (soc_df_build[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+        mask_soc_done_build = (soc_df_build[process_columns['complete_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+        mask_soc_plan_rec = (soc_df_rec[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+        mask_soc_done_rec = (soc_df_rec[process_columns['complete_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
 
-    # Формируем датасеты для соц. соревнования
-    soc_df_plan_build = soc_df_build[mask_soc_plan_build]
-    soc_df_done_build = soc_df_build[mask_soc_done_build]
-    soc_df_plan_rec = soc_df_rec[mask_soc_plan_rec]
-    soc_df_done_rec = soc_df_rec[mask_soc_done_rec]
+        # Формируем датасеты для соц. соревнования
+        soc_df_plan_build = soc_df_build[mask_soc_plan_build]
+        soc_df_done_build = soc_df_build[mask_soc_done_build]
+        soc_df_plan_rec = soc_df_rec[mask_soc_plan_rec]
+        soc_df_done_rec = soc_df_rec[mask_soc_done_rec]
 
-    # Считаем мероприятия плана
-    soc_report_plan_build = soc_df_plan_build.groupby([process_columns['region']]).agg(
-        {
-            process_columns['plan_date']: 'count',
-        }
-    ).reset_index()
-    # Считаем мероприятия факта
-    soc_report_done_build = soc_df_done_build.groupby([process_columns['region']]).agg(
-        {
-            process_columns['complete_date']: 'count',
-        }
-    ).reset_index()
-    soc_report_build = pd.merge(soc_report_plan_build, soc_report_done_build, how='outer').fillna(value=0).sort_values(by=process_columns['region']).rename(columns=soc_rename_columns)
-    logger.debug(f'{soc_report_plan_build = }')
-    logger.debug(f'{soc_report_done_build = }')
-    logger.debug(f'{soc_report_build = }')
+        # Считаем мероприятия плана
+        soc_report_plan_build = soc_df_plan_build.groupby([process_columns['region']]).agg(
+            {
+                process_columns['plan_date']: 'count',
+            }
+        ).reset_index()
+        # Считаем мероприятия факта
+        soc_report_done_build = soc_df_done_build.groupby([process_columns['region']]).agg(
+            {
+                process_columns['complete_date']: 'count',
+            }
+        ).reset_index()
+        soc_report_build = pd.merge(soc_report_plan_build, soc_report_done_build, how='outer', sort=True).fillna(value=0).rename(columns=soc_rename_columns)
+        soc_report_build[f'{chr(0x0394)}'] = soc_report_build['Факт'] - soc_report_build['План']
+        soc_report_build.loc["total"] = soc_report_build.sum(numeric_only=True)
+        soc_report_build.at["total", 'Регион/Зона мероприятия'] = "ИТОГО:"
+        logger.debug(f'{soc_report_build = }')
 
-    if not soc_report_build.empty:
-        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_build"]}"{Color.END}')
-        wb.excel_format_table(soc_report_build, report_sheets['soc_build'], excel_tables_names[report_sheets['soc_build']])
+        if not soc_report_build.empty:
+            print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_build"]}"{Color.END}')
+            wb.excel_format_table(soc_report_build, report_sheets['soc_build'], excel_tables_names[report_sheets['soc_build']])
 
-    # Считаем мероприятия плана
-    soc_report_plan_rec = soc_df_plan_rec.groupby([process_columns['region']]).agg(
-        {
-            process_columns['plan_date']: 'count',
-        }
-    ).reset_index()
-    # Считаем мероприятия факта
-    soc_report_done_rec = soc_df_done_rec.groupby([process_columns['region']]).agg(
-        {
-            process_columns['complete_date']: 'count',
-        }
-    ).reset_index()
-    soc_report_rec = pd.merge(soc_report_plan_rec, soc_report_done_rec, how='outer').fillna(value=0).sort_values(by=process_columns['region']).rename(columns=soc_rename_columns)
-    logger.debug(f'{soc_report_plan_rec = }')
-    logger.debug(f'{soc_report_done_rec = }')
-    logger.debug(f'{soc_report_rec = }')
+        # Считаем мероприятия плана
+        soc_report_plan_rec = soc_df_plan_rec.groupby([process_columns['region']]).agg(
+            {
+                process_columns['plan_date']: 'count',
+            }
+        ).reset_index()
+        # Считаем мероприятия факта
+        soc_report_done_rec = soc_df_done_rec.groupby([process_columns['region']]).agg(
+            {
+                process_columns['complete_date']: 'count',
+            }
+        ).reset_index()
+        soc_report_rec = pd.merge(soc_report_plan_rec, soc_report_done_rec, how='outer', sort=True).fillna(value=0).rename(columns=soc_rename_columns)
+        soc_report_rec[f'{chr(0x0394)}'] = soc_report_rec['Факт'] - soc_report_rec['План']
+        soc_report_rec.loc["total"] = soc_report_rec.sum(numeric_only=True)
+        soc_report_rec.at['total', 'Регион/Зона мероприятия'] = 'ИТОГО:'
+        logger.debug(f'{soc_report_rec = }')
 
-    if not soc_report_rec.empty:
-        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_rec"]}"{Color.END}')
-        wb.excel_format_table(soc_report_rec, report_sheets['soc_rec'], excel_tables_names[report_sheets['soc_rec']])
+        if not soc_report_rec.empty:
+            print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_rec"]}"{Color.END}')
+            wb.excel_format_table(soc_report_rec, report_sheets['soc_rec'], excel_tables_names[report_sheets['soc_rec']])
 
     #
     # Записываем сформированный файл отчета
