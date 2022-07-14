@@ -14,7 +14,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.8"
+    program_version = "0.5.9"
 
     # Константы
     BP = 'БП'
@@ -204,7 +204,7 @@ def main():
     if Path(file_name).is_file():
         try:
             os.remove(file_name)
-            print(f'Remove old file {Color.GREEN}"{file_name}"{Color.END}')
+            print(f'Удаляем существующий файл отчета {Color.GREEN}"{file_name}"{Color.END}')
         except Exception as ex:
             logger.error(f'Ошибка удаления файла: {ex}')
             sys.exit(1)
@@ -222,7 +222,7 @@ def main():
             # Формируем таблицу основного строительства
             main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
             if not main_build_df.empty:
-                print(f'Generate sheet: {Color.GREEN}"{data_sheets["city_main_build"]}"{Color.END}')
+                print(f'Создаем лист: {Color.GREEN}"{data_sheets["city_main_build"]}"{Color.END}')
                 wb.excel_format_table(
                     main_build_df,
                     data_sheets['city_main_build'],
@@ -231,7 +231,7 @@ def main():
             # Формируем таблицу дополнительного строительства
             ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
             if not ext_build_df.empty:
-                print(f'Generate sheet: {Color.GREEN}"{data_sheets["city_ext_build"]}"{Color.END}')
+                print(f'Создаем лист: {Color.GREEN}"{data_sheets["city_ext_build"]}"{Color.END}')
                 wb.excel_format_table(
                     ext_build_df,
                     data_sheets['city_ext_build'],
@@ -241,7 +241,7 @@ def main():
             if sheet == f'Реконструкция гор.ВОЛС {process_year}':
                 rec_df_ = data_frame
             if not data_frame.empty:
-                print(f'Generate sheet: {Color.GREEN}"{sheet}"{Color.END}')
+                print(f'Создаем лист: {Color.GREEN}"{sheet}"{Color.END}')
                 wb.excel_format_table(
                     data_frame,
                     sheet,
@@ -249,13 +249,13 @@ def main():
                 )
 
     # Создание отчёта
-    print(f'Generate report sheet: {Color.GREEN}"{report_sheets["report"]}"{Color.END}')
+    print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["report"]}"{Color.END}')
     for i in range(1, 13):
         last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
     try:
         ws = wb[report_sheets['report']]
     except KeyError:
-        logger.info(f"Sheet {report_sheets['report']} doesn't exist. Creating... ")
+        logger.info(f"Лист \"{report_sheets['report']}\" не существует. Создаем... ")
         ws = wb.create_sheet(title=report_sheets['report'])
 
     # Формирование статических полей отчёта
@@ -626,11 +626,11 @@ def main():
     current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(
         by=columns_for_sort)
     if not current_month_dataframe.empty:
-        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["current_month"]}"{Color.END}')
+        print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["current_month"]}"{Color.END}')
         wb.excel_format_table(current_month_dataframe, report_sheets['current_month'], excel_tables_names[report_sheets['current_month']])
 
     # Создание листа Нет ТЗ
-    # Формируем таблицы ТЗ для стройки и реконструкции
+    # формируем таблицы ТЗ для стройки и реконструкции
     #
     tz_build_dataframe = tz_build_dataframe[[process_columns['id'],
                                              process_columns['region'],
@@ -647,11 +647,11 @@ def main():
     # write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names,
     #                            table_style)
     if not tz_dataframe.empty:
-        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["tz"]}"{Color.END}')
+        print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["tz"]}"{Color.END}')
         wb.excel_format_table(tz_dataframe, report_sheets['tz'], excel_tables_names[report_sheets['tz']])
 
     # Создание листа Не переданы ТЗ в ПО
-    # Формируем таблицы передачи в ПО для стройки и реконструкции
+    # формируем таблицы передачи в ПО для стройки и реконструкции
     #
     sending_po_build_dataframe = sending_po_build_dataframe[[process_columns['id'],
                                                              process_columns['region'],
@@ -670,12 +670,12 @@ def main():
     # write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names,
     #                            excel_cell_names, table_style)
     if not sending_po_dataframe.empty:
-        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["sending_po"]}"{Color.END}')
+        print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["sending_po"]}"{Color.END}')
         wb.excel_format_table(sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
     # Создание листа ТЗ не принято ПО
     #
-    # Формируем таблицы не принято ПО для стройки и реконструкции
+    # формируем таблицы не принято ПО для стройки и реконструкции
     #
     received_po_build_dataframe = received_po_build_dataframe[[process_columns['id'],
                                                                process_columns['region'],
@@ -696,7 +696,7 @@ def main():
     # write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names,
     #                            excel_cell_names, table_style)
     if not received_po_dataframe.empty:
-        print(f'Generate report sheet: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
+        print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
     if args.soc_report:
@@ -723,7 +723,7 @@ def main():
         mask_soc_plan_rec = (soc_df_rec[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
         mask_soc_done_rec = (soc_df_rec[process_columns['complete_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
 
-        # Формируем датасеты для соц. соревнования
+        # Формируем datasets для соц. соревнования
         soc_df_plan_build = soc_df_build[mask_soc_plan_build]
         soc_df_done_build = soc_df_build[mask_soc_done_build]
         soc_df_plan_rec = soc_df_rec[mask_soc_plan_rec]
@@ -748,7 +748,7 @@ def main():
         logger.debug(f'{soc_report_build = }')
 
         if not soc_report_build.empty:
-            print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_build"]}"{Color.END}')
+            print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["soc_build"]}"{Color.END}')
             wb.excel_format_table(soc_report_build, report_sheets['soc_build'], excel_tables_names[report_sheets['soc_build']])
 
         # Считаем мероприятия плана
@@ -770,15 +770,17 @@ def main():
         logger.debug(f'{soc_report_rec = }')
 
         if not soc_report_rec.empty:
-            print(f'Generate report sheet: {Color.GREEN}"{report_sheets["soc_rec"]}"{Color.END}')
+            print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["soc_rec"]}"{Color.END}')
             wb.excel_format_table(soc_report_rec, report_sheets['soc_rec'], excel_tables_names[report_sheets['soc_rec']])
+            logger.debug(f'{wb.ws["B2"].value = }')
+
 
     #
     # Записываем сформированный файл отчета
     #
     logger.info(f'Удаляем лист {ws_first}')
     wb.remove(ws_first)
-    print(f'Save formatted data fo file {Color.GREEN}"{file_name}"{Color.END}')
+    print(f'Сохраняем отформатированные данные в файл {Color.GREEN}"{file_name}"{Color.END}')
     wb.save(file_name)
 
 

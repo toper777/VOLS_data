@@ -74,7 +74,7 @@ def read_from_dashboard(_url):
     :param _url:
     :return DataFrame:
     """
-    print(f'Read data from: "{_url}"')
+    print(f'Получаем данные из: "{_url}"')
     try:
         _dashboard_data = pd.read_json(_url, convert_dates=('дата', 'Дата'))
     except Exception as e:

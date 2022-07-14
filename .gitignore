@@ -8,3 +8,4 @@
 /vdi_venv/Scripts/pythonw.exe
 /vdi_venv/pyvenv.cfg
 /vdi_venv/
+/.hypothesis/
