@@ -14,12 +14,13 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.9"
+    program_version = "0.5.10"
 
     # Константы
     BP = 'БП'
     BP_BUILD: str = 'Строительство ВОЛС'
     BP_RECON: str = 'Реконструкция ВОЛС'
+    delta_char = f'{chr(0x0394)}'
 
     # Наименования колонок для преобразования даты
     columns_date = ['Планируемая дата окончания', 'Дата ввода', '_дата']
@@ -220,7 +221,7 @@ def main():
         if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
             extended_build_df = data_frame.copy(deep=True)  # keep extended data for analyses
             # Формируем таблицу основного строительства
-            main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notnull()]
+            main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notna() & (data_frame['KPI ПТР текущего года, км'] > 0)]
             if not main_build_df.empty:
                 print(f'Создаем лист: {Color.GREEN}"{data_sheets["city_main_build"]}"{Color.END}')
                 wb.excel_format_table(
@@ -229,7 +230,7 @@ def main():
                     excel_tables_names[data_sheets['city_main_build']],
                 )
             # Формируем таблицу дополнительного строительства
-            ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notnull()]
+            ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notna() | (data_frame['KPI ПТР текущего года, км'] == 0)]
             if not ext_build_df.empty:
                 print(f'Создаем лист: {Color.GREEN}"{data_sheets["city_ext_build"]}"{Color.END}')
                 wb.excel_format_table(
@@ -297,7 +298,7 @@ def main():
     ws['B9'].font = fn_bold
     ws['B9'].alignment = align_center
     ws['B9'].border = border_medium
-    ws['C9'] = f'{chr(0x0394)}'
+    ws['C9'] = delta_char
     ws['C9'].font = fn_bold
     ws['C9'].alignment = align_center
     ws['C9'].border = border_medium
@@ -340,7 +341,7 @@ def main():
     ws['B29'].font = fn_bold
     ws['B29'].alignment = align_center
     ws['B29'].border = border_medium
-    ws['C29'] = f'{chr(0x0394)}'
+    ws['C29'] = delta_char
     ws['C29'].font = fn_bold
     ws['C29'].alignment = align_center
     ws['C29'].border = border_medium
@@ -384,7 +385,7 @@ def main():
     ws['G9'].font = fn_bold
     ws['G9'].alignment = align_center
     ws['G9'].border = border_medium
-    ws['H9'] = f'{chr(0x0394)}'
+    ws['H9'] = delta_char
     ws['H9'].font = fn_bold
     ws['H9'].alignment = align_center
     ws['H9'].border = border_medium
@@ -436,8 +437,8 @@ def main():
     sending_po_build_dataframe = df[df[process_columns['send_tz_status']] != 'Исполнена']
     received_po_build_dataframe = df[df[process_columns['received_tz_status']] != 'Исполнена']
 
-    main_build_df = df[df['KPI ПТР текущего года, км'].notnull()]
-    ext_build_df = df[~df['KPI ПТР текущего года, км'].notnull()]
+    main_build_df = df[df['KPI ПТР текущего года, км'].notnull() & (df['KPI ПТР текущего года, км'] > 0)]
+    ext_build_df = df[~df['KPI ПТР текущего года, км'].notnull() | (df['KPI ПТР текущего года, км'] == 0)]
 
     ws['B2'] = main_build_df[process_columns['plan_date']].count()
     ws['B2'].font = fn_bold
@@ -480,7 +481,7 @@ def main():
     if args.old_algorithm:
         ws['C26'] = ext_build_df[
             (ext_build_df[process_columns['commissioning_date']] != '') & (ext_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (
-                        ext_build_df[process_columns['ks2_date']] != '') & (ext_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][
+                    ext_build_df[process_columns['ks2_date']] != '') & (ext_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][
             process_columns['commissioning_date']].count()
         ws['C26'].alignment = align_center
         ws['C26'].border = border_medium
@@ -729,20 +730,20 @@ def main():
         soc_df_plan_rec = soc_df_rec[mask_soc_plan_rec]
         soc_df_done_rec = soc_df_rec[mask_soc_done_rec]
 
-        # Считаем мероприятия плана
+        # Считаем мероприятия плана строительства ВОЛС
         soc_report_plan_build = soc_df_plan_build.groupby([process_columns['region']]).agg(
             {
                 process_columns['plan_date']: 'count',
             }
         ).reset_index()
-        # Считаем мероприятия факта
+        # Считаем мероприятия факта строительства ВОЛС
         soc_report_done_build = soc_df_done_build.groupby([process_columns['region']]).agg(
             {
                 process_columns['complete_date']: 'count',
             }
         ).reset_index()
         soc_report_build = pd.merge(soc_report_plan_build, soc_report_done_build, how='outer', sort=True).fillna(value=0).rename(columns=soc_rename_columns)
-        soc_report_build[f'{chr(0x0394)}'] = soc_report_build['Факт'] - soc_report_build['План']
+        soc_report_build[delta_char] = soc_report_build['Факт'] - soc_report_build['План']
         soc_report_build.loc["total"] = soc_report_build.sum(numeric_only=True)
         soc_report_build.at["total", 'Регион/Зона мероприятия'] = "ИТОГО:"
         logger.debug(f'{soc_report_build = }')
@@ -751,20 +752,20 @@ def main():
             print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["soc_build"]}"{Color.END}')
             wb.excel_format_table(soc_report_build, report_sheets['soc_build'], excel_tables_names[report_sheets['soc_build']])
 
-        # Считаем мероприятия плана
+        # Считаем мероприятия плана Реконструкции ВОЛС
         soc_report_plan_rec = soc_df_plan_rec.groupby([process_columns['region']]).agg(
             {
                 process_columns['plan_date']: 'count',
             }
         ).reset_index()
-        # Считаем мероприятия факта
+        # Считаем мероприятия факта Реконструкции ВОЛС
         soc_report_done_rec = soc_df_done_rec.groupby([process_columns['region']]).agg(
             {
                 process_columns['complete_date']: 'count',
             }
         ).reset_index()
         soc_report_rec = pd.merge(soc_report_plan_rec, soc_report_done_rec, how='outer', sort=True).fillna(value=0).rename(columns=soc_rename_columns)
-        soc_report_rec[f'{chr(0x0394)}'] = soc_report_rec['Факт'] - soc_report_rec['План']
+        soc_report_rec[delta_char] = soc_report_rec['Факт'] - soc_report_rec['План']
         soc_report_rec.loc["total"] = soc_report_rec.sum(numeric_only=True)
         soc_report_rec.at['total', 'Регион/Зона мероприятия'] = 'ИТОГО:'
         logger.debug(f'{soc_report_rec = }')
@@ -773,8 +774,6 @@ def main():
             print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["soc_rec"]}"{Color.END}')
             wb.excel_format_table(soc_report_rec, report_sheets['soc_rec'], excel_tables_names[report_sheets['soc_rec']])
             logger.debug(f'{wb.ws["B2"].value = }')
-
-
     #
     # Записываем сформированный файл отчета
     #
