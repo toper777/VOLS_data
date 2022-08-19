@@ -14,13 +14,13 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.10"
+    program_version = "0.5.11"
 
     # Константы
     BP = 'БП'
     BP_BUILD: str = 'Строительство ВОЛС'
     BP_RECON: str = 'Реконструкция ВОЛС'
-    delta_char = f'{chr(0x0394)}'
+    DELTA_CHAR = f'{chr(0x0394)}'
 
     # Наименования колонок для преобразования даты
     columns_date = ['Планируемая дата окончания', 'Дата ввода', '_дата']
@@ -58,7 +58,7 @@ def main():
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
-    parser.add_argument("--old-algorithm", action='store_true', help="Использовать алгоритм подсчета по КС-2 и вводу в эксплуатацию")
+    parser.add_argument("--new-algorithm", action='store_true', help="Использовать алгоритм подсчета по принятию в эксплуатацию, вместо факта КС-2 и вводу в эксплуатацию")
     parser.add_argument("--soc-report", action='store_true', help="Добавить в отчет страницы Соц. соревнования")
     args = parser.parse_args()
 
@@ -298,7 +298,7 @@ def main():
     ws['B9'].font = fn_bold
     ws['B9'].alignment = align_center
     ws['B9'].border = border_medium
-    ws['C9'] = delta_char
+    ws['C9'] = DELTA_CHAR
     ws['C9'].font = fn_bold
     ws['C9'].alignment = align_center
     ws['C9'].border = border_medium
@@ -341,7 +341,7 @@ def main():
     ws['B29'].font = fn_bold
     ws['B29'].alignment = align_center
     ws['B29'].border = border_medium
-    ws['C29'] = delta_char
+    ws['C29'] = DELTA_CHAR
     ws['C29'].font = fn_bold
     ws['C29'].alignment = align_center
     ws['C29'].border = border_medium
@@ -385,7 +385,7 @@ def main():
     ws['G9'].font = fn_bold
     ws['G9'].alignment = align_center
     ws['G9'].border = border_medium
-    ws['H9'] = delta_char
+    ws['H9'] = DELTA_CHAR
     ws['H9'].font = fn_bold
     ws['H9'].alignment = align_center
     ws['H9'].border = border_medium
@@ -450,18 +450,15 @@ def main():
     ws['B6'].alignment = align_center
     ws['B6'].border = border_medium
 
-    if args.old_algorithm:
+    if not args.new_algorithm:
         ws['C6'] = main_build_df[(main_build_df[process_columns['commissioning_date']] != '') & (
                 main_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (main_build_df[process_columns['ks2_date']] != '') & (
                                          main_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][process_columns['commissioning_date']].count()
-        ws['C6'].alignment = align_center
-        ws['C6'].border = border_medium
     else:
         ws['C6'] = main_build_df[(main_build_df[process_columns['complete_date']] != '') & (
                 main_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
-        ws['C6'].alignment = align_center
-        ws['C6'].border = border_medium
-
+    ws['C6'].alignment = align_center
+    ws['C6'].border = border_medium
     ws['D6'] = ws['C6'].value - ws['B6'].value
     ws['D6'].alignment = align_center
     ws['D6'].border = border_medium
@@ -478,18 +475,16 @@ def main():
             ext_build_df[process_columns['plan_date']] <= last_days_of_month[process_month])][process_columns['plan_date']].count()
     ws['B26'].alignment = align_center
     ws['B26'].border = border_medium
-    if args.old_algorithm:
+    if not args.new_algorithm:
         ws['C26'] = ext_build_df[
             (ext_build_df[process_columns['commissioning_date']] != '') & (ext_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (
                     ext_build_df[process_columns['ks2_date']] != '') & (ext_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][
             process_columns['commissioning_date']].count()
-        ws['C26'].alignment = align_center
-        ws['C26'].border = border_medium
     else:
         ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (
                 ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
-        ws['C26'].alignment = align_center
-        ws['C26'].border = border_medium
+    ws['C26'].alignment = align_center
+    ws['C26'].border = border_medium
     ws['D26'] = ws['C26'].value - ws['B26'].value
     ws['D26'].alignment = align_center
     ws['D26'].border = border_medium
@@ -553,17 +548,15 @@ def main():
         process_columns['plan_date']].count()
     ws['G6'].alignment = align_center
     ws['G6'].border = border_medium
-    if args.old_algorithm:
+    if not args.new_algorithm:
         ws['H6'] = rec_df[(rec_df[process_columns['commissioning_date2']] != '') & (
                 rec_df[process_columns['commissioning_date2']] <= last_days_of_month[process_month]) & (rec_df[process_columns['ks2_date2']] != '') & (
                                   rec_df[process_columns['ks2_date2']] <= last_days_of_month[process_month])][process_columns['commissioning_date2']].count()
-        ws['H6'].alignment = align_center
-        ws['H6'].border = border_medium
     else:
         ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][
             process_columns['complete_date2']].count()
-        ws['H6'].alignment = align_center
-        ws['H6'].border = border_medium
+    ws['H6'].alignment = align_center
+    ws['H6'].border = border_medium
 
     ws['I6'] = ws['H6'].value - ws['G6'].value
     ws['I6'].alignment = align_center
@@ -701,6 +694,7 @@ def main():
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
     if args.soc_report:
+        # TODO необходимо сделать подсчет соцсоревнования в соответствии с 2-мя режимами счета на КС-2 и принятию ВОЛС и только по завершению ВОЛС
         #
         # Формируем листы соцсоревнования
         #
@@ -743,7 +737,7 @@ def main():
             }
         ).reset_index()
         soc_report_build = pd.merge(soc_report_plan_build, soc_report_done_build, how='outer', sort=True).fillna(value=0).rename(columns=soc_rename_columns)
-        soc_report_build[delta_char] = soc_report_build['Факт'] - soc_report_build['План']
+        soc_report_build[DELTA_CHAR] = soc_report_build['Факт'] - soc_report_build['План']
         soc_report_build.loc["total"] = soc_report_build.sum(numeric_only=True)
         soc_report_build.at["total", 'Регион/Зона мероприятия'] = "ИТОГО:"
         logger.debug(f'{soc_report_build = }')
@@ -765,7 +759,7 @@ def main():
             }
         ).reset_index()
         soc_report_rec = pd.merge(soc_report_plan_rec, soc_report_done_rec, how='outer', sort=True).fillna(value=0).rename(columns=soc_rename_columns)
-        soc_report_rec[delta_char] = soc_report_rec['Факт'] - soc_report_rec['План']
+        soc_report_rec[DELTA_CHAR] = soc_report_rec['Факт'] - soc_report_rec['План']
         soc_report_rec.loc["total"] = soc_report_rec.sum(numeric_only=True)
         soc_report_rec.at['total', 'Регион/Зона мероприятия'] = 'ИТОГО:'
         logger.debug(f'{soc_report_rec = }')
