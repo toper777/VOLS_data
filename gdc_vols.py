@@ -14,7 +14,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.11"
+    program_version = "0.5.12"
 
     # Константы
     BP = 'БП'
@@ -27,7 +27,7 @@ def main():
     # Наименования колонок для преобразования числа
     columns_digit = ['ID']
     # Наименование колонки для сортировки по возрастанию
-    columns_for_sort = ['Регион/Зона мероприятия']
+    columns_for_sort = ['Регион/Зона мероприятия', 'Планируемая дата окончания']
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     last_days_of_month = {}
@@ -59,6 +59,7 @@ def main():
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
     parser.add_argument("--new-algorithm", action='store_true', help="Использовать алгоритм подсчета по принятию в эксплуатацию, вместо факта КС-2 и вводу в эксплуатацию")
+    parser.add_argument("--active-year", action='store_true', help="Формировать список активных мероприятий до конца года")
     parser.add_argument("--soc-report", action='store_true', help="Добавить в отчет страницы Соц. соревнования")
     args = parser.parse_args()
 
@@ -113,7 +114,7 @@ def main():
 
     report_sheets = {
         'report': "Отчетная таблица",
-        'current_month': f'Активные мероприятия {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}',
+        'current_month': f'Активные мероприятия {datetime.date(process_year, process_month, 1).strftime("%m.%Y") if not args.active_year else process_year}',
         'tz': 'Нет ТЗ',
         'sending_po': "Нет передачи ТЗ",
         'received_po': 'Не приняты ТЗ',
@@ -591,7 +592,10 @@ def main():
 
     # Создание листа Активные мероприятия строительства месяца отчёта
     # маска для текущего месяца
-    curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+    if not args.active_year:
+        curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+    else:
+        curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
     curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (
         ~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
@@ -604,7 +608,10 @@ def main():
     current_month_build_dataframe[BP] = BP_BUILD
 
     # маска для текущего месяца
-    curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+    if not args.active_year:
+        curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+    else:
+        curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
     curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) & (
         ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
