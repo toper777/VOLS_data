@@ -117,8 +117,8 @@ def main():
         'report': "Отчетная таблица",
         'current_month': f'Активные мероприятия {datetime.date(process_year, process_month, 1).strftime("%m.%Y") if not args.active_year else process_year}',
         'tz': 'Нет ТЗ',
-        'sending_po': "Нет передачи ТЗ",
-        'received_po': 'Не приняты ТЗ',
+        'sending_po': "Нет передачи ТЗ в ПО",
+        'received_po': 'Не приняты ТЗ ПО',
         'soc_build': 'Соц.соревнование. Стр.',
         'soc_rec': 'Соц. соревнование. Рек.',
     }
@@ -126,7 +126,7 @@ def main():
     reports_data = {
         'tz': [f'ВОЛС. {report_sheets["tz"]}', "FOCL_no_TU", ['focl_no_tu', 'cc_focl_no_tu'], 'focl_no_tu.html'],
         'sending_po': [f'ВОЛС. {report_sheets["sending_po"]}', "FOCL_no_TU_to_PO", ['focl_no_tu_to_po', 'cc_focl_no_tu_to_po'], 'focl_no_tu_to_po.html'],
-        'received_po': [f'ВОЛС. {report_sheets["received_po"]}', "FOCL_no_TU_received_by_PO", ['focl_tu_no_received_by_po', 'cc_focl_tu_no_received_by_po'], 'focl_tu_no_received_by_po.html'],
+        'received_po': [f'ВОЛС. {report_sheets["received_po"]}', "FOCL_TU_not_received_by_PO", ['focl_tu_not_received_by_po', 'cc_focl_tu_not_received_by_po'], 'focl_tu_not_received_by_po.html'],
     }
 
     excel_tables_names = {

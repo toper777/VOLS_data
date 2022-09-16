@@ -259,7 +259,7 @@ def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool) -> None:
     for key, value in config['MAILING_LISTS'].items():
         config_dict[key] = email_split(value)
 
-    for key in ['cc_focl_no_tu', 'cc_focl_no_tu_to_po', 'cc_focl_tu_no_received_by_po']:
+    for key in ['cc_focl_no_tu', 'cc_focl_no_tu_to_po', 'cc_focl_tu_not_received_by_po']:
         config_dict[key].append(my_email)
 
     mailing_lists = {}
