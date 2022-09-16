@@ -1,7 +1,6 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import argparse
 import locale
-import os
 
 import openpyxl.styles.borders as borders_style
 from openpyxl.formatting.rule import CellIsRule
