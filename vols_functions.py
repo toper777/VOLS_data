@@ -1,13 +1,39 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
+import base64
+import configparser
+import datetime
+import os
 import sys
+from io import BytesIO
 from pathlib import Path
+from typing import List
 
+import pandas as pd
+from dotenv import load_dotenv
 from loguru import logger
 from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.table import Table, TableStyleInfo
-import datetime
-import pandas as pd
-import openpyxl as openpyxl
+from pandas import DataFrame
+from redmail import EmailSender
+
+from FormattedWorkbook import FormattedWorkbook
+
+load_dotenv()
+
+EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
+EMAIL_PASSWORD = base64.b85decode(os.getenv('EMAIL_PASSWORD').encode('UTF-8')).decode('UTF-8')
+my_email = EMAIL_ADDRESS
+
+config_file = 'gdc_vols.ini'
+
+
+def email_split(mail_list: str) -> list:
+    """Возвращает список email адресов из строки"""
+    email_list = mail_list.strip().split(',')
+    for i in range(len(email_list)):
+        email_list[i] = email_list[i].strip()
+    return email_list
+
+
 
 
 def fill_cell_names():
@@ -190,3 +216,73 @@ def adjust_columns_width(_dataframe):
         _adjusted_width = _max_length + 3
         _dataframe.column_dimensions[_column].width = _adjusted_width
     return _dataframe
+
+
+def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes):
+    """
+    @param data_frame:  Таблица DataFrame с данными
+    @param tag:  Заголовок для формирования темы письма
+    @param template_directory:  Директория с шаблонами писем
+    @param template_name:  Наименование шаблона для письма
+    @param to_address:  Список адресатов для письма
+    @param cc_address:  Список адресатов для копии письма
+    @param attachment_file: битовый массив c файлом Excel
+    """
+    report_email = EmailSender(host='mail.megafon.ru', port=25, username=EMAIL_ADDRESS, password=EMAIL_PASSWORD, use_starttls=True)
+    report_email.set_template_paths(html=f'{template_directory}\\html\\')
+    report_email.sender = EMAIL_ADDRESS
+    report_email.receivers = to_address
+    if cc_address:
+        report_email.cc = cc_address
+    # Send the report
+    print(f'Send email "{tag}" to: {to_address} and copy: {cc_address}')
+    report_email.send(
+        subject=f'[automated mailing system] {tag}',
+        html_template=template_name,
+        body_params={'title': tag},
+        body_tables={"table": data_frame},
+        attachments={
+            f'{datetime.date.today().strftime("%Y%m%d")} {tag}.xlsx': attachment_file,
+        }
+    )
+
+
+def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool) -> None:
+    config = configparser.ConfigParser()
+    try:
+        with open(config_file, mode='r') as fr:
+            config.read_file(fr)
+    except FileNotFoundError:
+        raise FileNotFoundError(f'Файл конфигурации {config_file} не найден.')
+
+    config_dict = {}
+    for key, value in config['MAILING_LISTS'].items():
+        config_dict[key] = email_split(value)
+
+    for key in ['cc_focl_no_tu', 'cc_focl_no_tu_to_po', 'cc_focl_tu_no_received_by_po']:
+        config_dict[key].append(my_email)
+
+    mailing_lists = {}
+    for key in config_dict.keys():
+        mailing_lists[key] = config_dict[key] if no_debug else my_email
+    mailing_lists['me'] = my_email
+    logger.debug(f'{mailing_lists = }')
+
+    template_dir = 'templates'
+    tag, tab_name, receivers, template = email_list
+    mail_dfs = dfs.assign(пп=range(1, len(dfs) + 1)).set_index('пп').fillna('')
+    to = mailing_lists[receivers[0]]
+    cc = mailing_lists[receivers[1]]
+    # Формируем временный файл с форматированной Excel таблицей для рассылки
+    with BytesIO() as fp:
+        logger.info(f'Создаем рабочую книгу для временного файла')
+        mail_wb = FormattedWorkbook()
+        mail_ws_first = mail_wb.active
+        mail_wb.excel_format_table(dfs, tag, tab_name)
+        logger.info(f'Удаляем лист {mail_ws_first}')
+        mail_wb.remove(mail_ws_first)
+        logger.info(f'Сохраняем временную книгу в {fp.__class__.__name__}')
+        mail_wb.save(fp)
+        temp_excel_file = fp.getvalue()
+
+    megafon_send_email(mail_dfs, tag, template_dir, template, to, cc, temp_excel_file)

@@ -7,14 +7,13 @@ import openpyxl.styles.borders as borders_style
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 
-from FormattedWorkbook import FormattedWorkbook
 from vols_functions import *
 
 
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.12"
+    program_version = "0.5.15"
 
     # Константы
     BP = 'БП'
@@ -58,6 +57,8 @@ def main():
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
     parser.add_argument("-b", "--report-branch", help="Branch name", default=work_branch)
+    parser.add_argument("-l", "--send-email", action='store_true', help="Режим рассылки email")
+    parser.add_argument("--no-debug", action='store_true', help="Запустить рассылку писем в \"боевом\" режиме")
     parser.add_argument("--new-algorithm", action='store_true', help="Использовать алгоритм подсчета по принятию в эксплуатацию, вместо факта КС-2 и вводу в эксплуатацию")
     parser.add_argument("--active-year", action='store_true', help="Формировать список активных мероприятий до конца года")
     parser.add_argument("--soc-report", action='store_true', help="Добавить в отчет страницы Соц. соревнования")
@@ -120,6 +121,12 @@ def main():
         'received_po': 'Не приняты ТЗ',
         'soc_build': 'Соц.соревнование. Стр.',
         'soc_rec': 'Соц. соревнование. Рек.',
+    }
+
+    reports_data = {
+        'tz': [f'ВОЛС. {report_sheets["tz"]}', "FOCL_no_TU", ['focl_no_tu', 'cc_focl_no_tu'], 'focl_no_tu.html'],
+        'sending_po': [f'ВОЛС. {report_sheets["sending_po"]}', "FOCL_no_TU_to_PO", ['focl_no_tu_to_po', 'cc_focl_no_tu_to_po'], 'focl_no_tu_to_po.html'],
+        'received_po': [f'ВОЛС. {report_sheets["received_po"]}', "FOCL_no_TU_received_by_PO", ['focl_tu_no_received_by_po', 'cc_focl_tu_no_received_by_po'], 'focl_tu_no_received_by_po.html'],
     }
 
     excel_tables_names = {
@@ -648,6 +655,8 @@ def main():
     # write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names,
     #                            table_style)
     if not tz_dataframe.empty:
+        if args.send_email:
+            call_send_email(tz_dataframe, reports_data['tz'], args.no_debug)
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["tz"]}"{Color.END}')
         wb.excel_format_table(tz_dataframe, report_sheets['tz'], excel_tables_names[report_sheets['tz']])
 
@@ -671,6 +680,8 @@ def main():
     # write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names,
     #                            excel_cell_names, table_style)
     if not sending_po_dataframe.empty:
+        if args.send_email:
+            call_send_email(sending_po_dataframe, reports_data['sending_po'], args.no_debug)
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["sending_po"]}"{Color.END}')
         wb.excel_format_table(sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
@@ -697,6 +708,8 @@ def main():
     # write_report_table_to_file(received_po_dataframe, file_name, report_sheets['received_po'], excel_tables_names,
     #                            excel_cell_names, table_style)
     if not received_po_dataframe.empty:
+        if args.send_email:
+            call_send_email(tz_dataframe, reports_data['received_po'], args.no_debug)
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
