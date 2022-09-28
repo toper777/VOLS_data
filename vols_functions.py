@@ -15,6 +15,7 @@ from openpyxl.utils import get_column_letter
 from pandas import DataFrame
 from redmail import EmailSender
 
+from Colors import Colors as Color
 from FormattedWorkbook import FormattedWorkbook
 
 load_dotenv()
@@ -32,8 +33,6 @@ def email_split(mail_list: str) -> list:
     for i in range(len(email_list)):
         email_list[i] = email_list[i].strip()
     return email_list
-
-
 
 
 def fill_cell_names():
@@ -58,27 +57,6 @@ def fill_cell_names():
                 _cell_names[_count] = chr(_i) + chr(_j) + chr(_k)
                 _count += 1
     return _cell_names
-
-
-# Colors for print
-class Color:
-    """
-    Содержит кодировки цветов для консольного вывода
-    """
-
-    def __init__(self):
-        pass
-
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END = '\033[0m'
 
 
 def print_debug(level, message):

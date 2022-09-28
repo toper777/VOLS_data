@@ -12,7 +12,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.15"
+    program_version = "0.5.16"
 
     # Константы
     BP = 'БП'
