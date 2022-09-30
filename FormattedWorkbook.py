@@ -52,7 +52,7 @@ def adjust_columns_width(_dataframe):
 
 
 class FormattedWorkbook(Workbook):
-    def __init__(self, logging_level='ERROR', table_style='TableStyleMedium4'):
+    def __init__(self, logging_level='ERROR', table_style='TableStyleMedium2'):
         super().__init__()
         self.logging_level = logging_level
         self.logger = loguru.logger
