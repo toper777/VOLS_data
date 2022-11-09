@@ -12,7 +12,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.16"
+    program_version = "0.5.17"
 
     # Константы
     BP = 'БП'
@@ -259,7 +259,7 @@ def main():
     # Создание отчёта
     print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["report"]}"{Color.END}')
     for i in range(1, 13):
-        last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.date(process_year, i, 1)))
+        last_days_of_month[i] = pd.Timestamp(last_day_of_month(datetime.datetime(process_year, i, 1)))
     try:
         ws = wb[report_sheets['report']]
     except KeyError:

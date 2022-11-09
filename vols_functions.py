@@ -146,10 +146,16 @@ def convert_int(_data_frame, _columns):
     return _data_frame
 
 
-def last_day_of_month(_date):
+def last_day_of_month(_date: datetime) -> datetime:
     if _date.month == 12:
-        return _date.replace(day=31)
-    return _date.replace(month=_date.month + 1, day=1) - datetime.timedelta(days=1)
+        curr_year = _date.year + 1
+        curr_month, curr_day = 1, 1
+    else:
+        curr_year = _date.year
+        curr_month = _date.month + 1
+        curr_day = 1
+    return datetime.datetime(year=curr_year, month=curr_month, day=curr_day) - datetime.timedelta(microseconds=1)
+    # return _date.replace(month=_date.month + 1, day=1) - datetime.timedelta(seconds=1)
 
 
 def sum_sort_events(_data_frame, _column, _condition):
