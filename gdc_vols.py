@@ -12,7 +12,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.17"
+    program_version = "0.5.18"
 
     # Константы
     BP = 'БП'
@@ -708,7 +708,7 @@ def main():
     #                            excel_cell_names, table_style)
     if not received_po_dataframe.empty:
         if args.send_email:
-            call_send_email(tz_dataframe, reports_data['received_po'], args.no_debug)
+            call_send_email(received_po_dataframe, reports_data['received_po'], args.no_debug)
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
