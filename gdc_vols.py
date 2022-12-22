@@ -12,7 +12,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.18"
+    program_version = "0.5.19"
 
     # Константы
     BP = 'БП'
@@ -98,7 +98,7 @@ def main():
         file_name = args.report_file
 
     urls = {
-        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211',
+        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
         f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
         f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
@@ -438,8 +438,8 @@ def main():
     ws['I5'].border = border_medium
 
     # Анализ строительства ВОЛС
-    df = extended_build_df
-    build_dashboard_data = df
+    df = extended_build_df.copy(deep=True)
+    build_dashboard_data = df.copy(deep=True)
     tz_build_dataframe = df[df[process_columns['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = df[df[process_columns['send_tz_status']] != 'Исполнена']
     received_po_build_dataframe = df[df[process_columns['received_tz_status']] != 'Исполнена']
@@ -603,7 +603,7 @@ def main():
     else:
         curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) & (
+    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) | (
         ~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
@@ -619,7 +619,7 @@ def main():
     else:
         curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) & (
+    curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) | (
         ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
     # Выборка объектов реконструкции по маскам
     current_month_reconstruction_dataframe = rec_df[curr_month_bool_mask & curr_status_bool_mask]
