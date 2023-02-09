@@ -3,6 +3,7 @@ import argparse
 import locale
 
 import openpyxl.styles.borders as borders_style
+import pandas as pd
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 
@@ -12,7 +13,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.19"
+    program_version = "0.5.20"
 
     # Константы
     BP = 'БП'
@@ -98,7 +99,8 @@ def main():
         file_name = args.report_file
 
     urls = {
-        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
+        # f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
+        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City',
         f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
         f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
@@ -228,7 +230,9 @@ def main():
         if sheet == f'Расш. стр. гор.ВОЛС {process_year}':
             extended_build_df = data_frame.copy(deep=True)  # keep extended data for analyses
             # Формируем таблицу основного строительства
-            main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notna() & (data_frame['KPI ПТР текущего года, км'] > 0)]
+            # TODO: изменения 2023 года. Пока нет разделения на основное и дополнительное
+            # main_build_df = data_frame[data_frame['KPI ПТР текущего года, км'].notna() & (data_frame['KPI ПТР текущего года, км'] > 0)]
+            main_build_df = data_frame
             if not main_build_df.empty:
                 print(f'Создаем лист: {Color.GREEN}"{data_sheets["city_main_build"]}"{Color.END}')
                 wb.excel_format_table(
@@ -237,7 +241,9 @@ def main():
                     excel_tables_names[data_sheets['city_main_build']],
                 )
             # Формируем таблицу дополнительного строительства
-            ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notna() | (data_frame['KPI ПТР текущего года, км'] == 0)]
+            # TODO: изменения 2023 года. Пока нет разделения на основное и дополнительное
+            # ext_build_df = data_frame[~data_frame['KPI ПТР текущего года, км'].notna() | (data_frame['KPI ПТР текущего года, км'] == 0)]
+            ext_build_df = pd.DataFrame()
             if not ext_build_df.empty:
                 print(f'Создаем лист: {Color.GREEN}"{data_sheets["city_ext_build"]}"{Color.END}')
                 wb.excel_format_table(
@@ -438,14 +444,18 @@ def main():
     ws['I5'].border = border_medium
 
     # Анализ строительства ВОЛС
+    # TODO: Необходимо переделать генерацию отчетной страницы на процедуры или классы
+    # TODO: изменения 2023 года. Пока нет разделения на основное и дополнительное
     df = extended_build_df.copy(deep=True)
     build_dashboard_data = df.copy(deep=True)
     tz_build_dataframe = df[df[process_columns['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = df[df[process_columns['send_tz_status']] != 'Исполнена']
     received_po_build_dataframe = df[df[process_columns['received_tz_status']] != 'Исполнена']
 
-    main_build_df = df[df['KPI ПТР текущего года, км'].notnull() & (df['KPI ПТР текущего года, км'] > 0)]
-    ext_build_df = df[~df['KPI ПТР текущего года, км'].notnull() | (df['KPI ПТР текущего года, км'] == 0)]
+    # TODO: изменения 2023 года. Пока нет разделения на основное и дополнительное
+    # main_build_df = df[df['KPI ПТР текущего года, км'].notnull() & (df['KPI ПТР текущего года, км'] > 0)]
+    main_build_df = df
+    ext_build_df = df
 
     ws['B2'] = main_build_df[process_columns['plan_date']].count()
     ws['B2'].font = fn_bold
