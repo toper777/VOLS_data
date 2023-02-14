@@ -13,7 +13,7 @@ from vols_functions import *
 def main():
     # program and version
     program_name = "gdc_vols"
-    program_version = "0.5.20"
+    program_version = "0.5.21"
 
     # Константы
     BP = 'БП'
@@ -22,7 +22,7 @@ def main():
     DELTA_CHAR = f'{chr(0x0394)}'
 
     # Наименования колонок для преобразования даты
-    columns_date = ['Планируемая дата окончания', 'Дата ввода', '_дата']
+    columns_date = ['Планируемая дата окончания', 'Дата ввода', 'Прогнозная дата окончания', '_дата']
     # Наименования колонок для преобразования числа
     columns_digit = ['ID']
     # Наименование колонки для сортировки по возрастанию
@@ -194,7 +194,8 @@ def main():
         'branch': 'Филиал',
         'region': 'Регион/Зона мероприятия',
         'name': 'Название',
-        'program': 'Программы'
+        'program': 'Программы',
+        'prognoz_date': 'Прогнозная дата окончания',
     }
 
     rename_columns = {
