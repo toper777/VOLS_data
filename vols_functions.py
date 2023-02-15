@@ -29,7 +29,7 @@ config_file = 'gdc_vols.ini'
 
 def email_split(mail_list: str) -> list:
     """Возвращает список email адресов из строки"""
-    email_list = mail_list.strip().split(',')
+    email_list = mail_list.strip().split(',| |;')
     for i in range(len(email_list)):
         email_list[i] = email_list[i].strip()
     return email_list
