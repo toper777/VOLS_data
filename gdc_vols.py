@@ -9,12 +9,12 @@ from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 
 from vols_functions import *
 
+# program and version
+PROGRAM_NAME: str = "gdc_vols"
+PROGRAM_VERSION: str = "0.5.24"
+
 
 def main():
-    # program and version
-    program_name = "gdc_vols"
-    program_version = "0.5.23"
-
     # Константы
     BP = 'БП'
     BP_BUILD: str = 'Строительство ВОЛС'
@@ -51,7 +51,7 @@ def main():
                          top=Side(style=borders_style.BORDER_THIN), bottom=Side(style=borders_style.BORDER_THIN))
 
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description=f'{program_name} v.{program_version}')
+    parser = argparse.ArgumentParser(description=f'{PROGRAM_NAME} v.{PROGRAM_VERSION}')
     parser.add_argument("-v", "--verbose", type=int, help="Уровень отладки: 0 - CRITICAL, 1 - ERROR, 2 - INFO, 3 - DEBUG")
     parser.add_argument("-y", "--year", type=int, help="year for processing")
     parser.add_argument("-m", "--month", type=int, help="month for processing")
@@ -207,7 +207,7 @@ def main():
         process_columns['complete_date']: 'Факт',
     }
 
-    print(f'{program_name}: {program_version}')
+    print(f'{PROGRAM_NAME}: {PROGRAM_VERSION}')
 
     wb = FormattedWorkbook(logging_level=logger_level)
     ws_first = wb.active

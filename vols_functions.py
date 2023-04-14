@@ -18,6 +18,9 @@ from redmail import EmailSender
 from Colors import Colors as Color
 from FormattedWorkbook import FormattedWorkbook
 
+from gdc_vols import PROGRAM_NAME, PROGRAM_VERSION
+
+
 load_dotenv()
 
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
@@ -80,7 +83,7 @@ def read_from_dashboard(_url):
     """
     print(f'Получаем данные из: "{_url}"')
     try:
-        _dashboard_data = pd.read_json(_url, convert_dates=('дата', 'Дата'))
+        _dashboard_data = pd.read_json(_url, convert_dates=['дата', 'Дата'])
     except Exception as e:
         print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(1)
@@ -223,7 +226,11 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     report_email.send(
         subject=f'[automated mailing system] {tag}',
         html_template=template_name,
-        body_params={'title': tag},
+        body_params={
+            'title': tag,
+            'prog': PROGRAM_NAME,
+            'ver': PROGRAM_VERSION,
+        },
         body_tables={"table": data_frame},
         attachments={
             f'{datetime.date.today().strftime("%Y%m%d")} {tag}.xlsx': attachment_file,
