@@ -216,7 +216,7 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     @param attachment_file: битовый массив c файлом Excel
     """
     report_email = EmailSender(host='mail.megafon.ru', port=25, username=EMAIL_ADDRESS, password=EMAIL_PASSWORD, use_starttls=True)
-    report_email.set_template_paths(html=f'{template_directory}\\html\\')
+    report_email.set_template_paths(html=Path(template_directory, 'html'))
     report_email.sender = EMAIL_ADDRESS
     report_email.receivers = to_address
     if cc_address:
