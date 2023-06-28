@@ -224,3 +224,5 @@ cython_debug/
 
 /rrl.json
 /rrl.xlsx
+.vscode/
+.env
