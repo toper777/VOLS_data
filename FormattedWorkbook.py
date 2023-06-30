@@ -52,13 +52,14 @@ def adjust_columns_width(_dataframe):
 
 
 class FormattedWorkbook(Workbook):
-    def __init__(self, logging_level='ERROR', table_style='TableStyleMedium2'):
+    def __init__(self, logging_level='ERROR', table_style='TableStyleMedium2', properties_creator=None):
         super().__init__()
         self.logging_level = logging_level
         self.logger = loguru.logger
         self.table_style = table_style
         self.excel_cell_names = fill_cell_names()
         self.ws = self.active
+        self.properties.creator = properties_creator
 
     def excel_format_table(self, df: DataFrame, save_sheet_name: str, save_table_name: str):
         """ Метод обеспечивает форматирование листа Excel с таблицей."""

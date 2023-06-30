@@ -267,7 +267,7 @@ def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool) -> None:
     # Формируем временный файл с форматированной Excel таблицей для рассылки
     with BytesIO() as fp:
         logger.info(f'Создаем рабочую книгу для временного файла')
-        mail_wb = FormattedWorkbook()
+        mail_wb = FormattedWorkbook(properties_creator=EMAIL_ADDRESS)
         mail_ws_first = mail_wb.active
         mail_wb.excel_format_table(dfs, tag, tab_name)
         logger.info(f'Удаляем лист {mail_ws_first}')

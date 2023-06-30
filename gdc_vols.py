@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.5.26"
+PROGRAM_VERSION: str = "0.5.27"
 
 
 def main():
@@ -209,7 +209,7 @@ def main():
 
     print(f'{PROGRAM_NAME}: {PROGRAM_VERSION}')
 
-    wb = FormattedWorkbook(logging_level=logger_level)
+    wb = FormattedWorkbook(logging_level=logger_level, properties_creator=EMAIL_ADDRESS)
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
