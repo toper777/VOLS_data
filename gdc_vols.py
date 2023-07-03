@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.5.27"
+PROGRAM_VERSION: str = "0.5.28"
 
 
 def main():
@@ -64,6 +64,11 @@ def main():
     parser.add_argument("--soc-report", action='store_true', help="Добавить в отчет страницы Соц. соревнования")
     args = parser.parse_args()
 
+    # Добавление суффикса к имени сохраняемого файла при задании режимов работы
+    file_suffix = ''
+    if any([args.new_algorithm, args.soc_report, args.active_year]):
+        file_suffix = f'{" [new-algorithm]" if args.new_algorithm else ""}{" [soc-report]" if args.soc_report else ""}{" [active-year]" if args.active_year else ""}'
+
     # Уровень отладочных сообщений
     if args.verbose is None or args.verbose == 1:
         logger_level = 'ERROR'
@@ -93,7 +98,7 @@ def main():
 
     if args.report_file is None:
         vols_dir = Path('//megafon.ru/KVK/KRN/Files/TelegrafFiles/ОПРС/!Проекты РЦРП/Блок №4/ВОЛС', str(process_year))
-        vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}.xlsx'
+        vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}{file_suffix}.xlsx'
         file_name = Path(vols_dir, vols_file)
     else:
         file_name = Path(args.report_file)
