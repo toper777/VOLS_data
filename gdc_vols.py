@@ -226,14 +226,6 @@ def main():
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
-    if Path(file_name).is_file():
-        try:
-            os.remove(file_name)
-            print(f'Удаляем существующий файл отчета {Color.GREEN}"{file_name}"{Color.END}')
-        except Exception as ex:
-            logger.error(f'Ошибка удаления файла: {ex}')
-            sys.exit(1)
-
     for sheet, url in urls.items():
         data_frame = read_from_dashboard(url)  # Читаем данные из сети
         data_frame = data_frame[
@@ -822,6 +814,13 @@ def main():
     #
     logger.info(f'Удаляем лист {ws_first}')
     wb.remove(ws_first)
+    if Path(file_name).is_file():
+        try:
+            os.remove(file_name)
+            print(f'Удаляем существующий файл отчета {Color.GREEN}"{file_name}"{Color.END}')
+        except Exception as ex:
+            logger.error(f'Ошибка удаления файла: {ex}')
+            sys.exit(1)
     print(f'Сохраняем отформатированные данные в файл {Color.GREEN}"{file_name}"{Color.END}')
     wb.save(file_name)
 
