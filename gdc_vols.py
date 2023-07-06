@@ -12,7 +12,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.0"
+PROGRAM_VERSION: str = "0.6.1"
 
 
 def main():
@@ -102,7 +102,14 @@ def main():
         vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}{file_suffix}.xlsx'
         file_name = Path(vols_dir, vols_file)
     else:
-        file_name = Path(args.report_file)
+        if Path(args.report_file).parent.exists():
+            file_name = Path(args.report_file)
+            logger.error(file_name.suffix)
+            if Path(args.report_file).suffix != '.xlsx':
+                file_name = file_name.with_suffix('.xlsx')
+        else:
+            logger.error(f'Директория для файла отчета {Path(args.report_file).parent} не существует')
+            sys.exit(100)
 
     urls = {
         # f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
