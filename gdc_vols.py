@@ -1,6 +1,7 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import argparse
 import locale
+import threading
 
 import openpyxl.styles.borders as borders_style
 import pandas as pd
@@ -11,7 +12,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.5.28"
+PROGRAM_VERSION: str = "0.6.0"
 
 
 def main():
@@ -674,7 +675,8 @@ def main():
     #                            table_style)
     if not tz_dataframe.empty:
         if args.send_email:
-            call_send_email(tz_dataframe, reports_data['tz'], args.no_debug)
+            email_thread = threading.Thread(target=call_send_email, args=(tz_dataframe, reports_data['tz'], args.no_debug,))
+            email_thread.start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["tz"]}"{Color.END}')
         wb.excel_format_table(tz_dataframe, report_sheets['tz'], excel_tables_names[report_sheets['tz']])
 
@@ -699,7 +701,8 @@ def main():
     #                            excel_cell_names, table_style)
     if not sending_po_dataframe.empty:
         if args.send_email:
-            call_send_email(sending_po_dataframe, reports_data['sending_po'], args.no_debug)
+            email_thread = threading.Thread(target=call_send_email, args=(sending_po_dataframe, reports_data['sending_po'], args.no_debug,))
+            email_thread.start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["sending_po"]}"{Color.END}')
         wb.excel_format_table(sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
@@ -727,7 +730,8 @@ def main():
     #                            excel_cell_names, table_style)
     if not received_po_dataframe.empty:
         if args.send_email:
-            call_send_email(received_po_dataframe, reports_data['received_po'], args.no_debug)
+            email_thread = threading.Thread(target=call_send_email, args=(received_po_dataframe, reports_data['received_po'], args.no_debug,))
+            email_thread.start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
