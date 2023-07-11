@@ -12,7 +12,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.1"
+PROGRAM_VERSION: str = "0.6.2"
 
 
 def main():
@@ -104,7 +104,6 @@ def main():
     else:
         if Path(args.report_file).parent.exists():
             file_name = Path(args.report_file)
-            logger.error(file_name.suffix)
             if Path(args.report_file).suffix != '.xlsx':
                 file_name = file_name.with_suffix('.xlsx')
         else:
@@ -674,8 +673,7 @@ def main():
     #                            table_style)
     if not tz_dataframe.empty:
         if args.send_email:
-            email_thread = threading.Thread(target=call_send_email, args=(tz_dataframe, reports_data['tz'], args.no_debug,))
-            email_thread.start()
+            threading.Thread(target=call_send_email, args=(tz_dataframe, reports_data['tz'], args.no_debug,)).start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["tz"]}"{Color.END}')
         wb.excel_format_table(tz_dataframe, report_sheets['tz'], excel_tables_names[report_sheets['tz']])
 
@@ -700,8 +698,7 @@ def main():
     #                            excel_cell_names, table_style)
     if not sending_po_dataframe.empty:
         if args.send_email:
-            email_thread = threading.Thread(target=call_send_email, args=(sending_po_dataframe, reports_data['sending_po'], args.no_debug,))
-            email_thread.start()
+            threading.Thread(target=call_send_email, args=(sending_po_dataframe, reports_data['sending_po'], args.no_debug,)).start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["sending_po"]}"{Color.END}')
         wb.excel_format_table(sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
@@ -729,8 +726,7 @@ def main():
     #                            excel_cell_names, table_style)
     if not received_po_dataframe.empty:
         if args.send_email:
-            email_thread = threading.Thread(target=call_send_email, args=(received_po_dataframe, reports_data['received_po'], args.no_debug,))
-            email_thread.start()
+            threading.Thread(target=call_send_email, args=(received_po_dataframe, reports_data['received_po'], args.no_debug,)).start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
@@ -816,14 +812,18 @@ def main():
     wb.remove(ws_first)
     if Path(file_name).is_file():
         try:
-            os.remove(file_name)
             print(f'Удаляем существующий файл отчета {Color.GREEN}"{file_name}"{Color.END}')
+            os.remove(file_name)
         except Exception as ex:
             logger.error(f'Ошибка удаления файла: {ex}')
             sys.exit(1)
-    print(f'Сохраняем отформатированные данные в файл {Color.GREEN}"{file_name}"{Color.END}')
-    wb.save(file_name)
 
+    try:
+        print(f'Сохраняем отформатированные данные в файл {Color.GREEN}"{file_name}"{Color.END}')
+        wb.save(file_name)
+    except Exception as ex:
+        logger.error(f'Ошибка сохранения файла файла: {ex}')
+        sys.exit(2)
 
 if __name__ == '__main__':
     main()

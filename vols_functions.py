@@ -277,3 +277,7 @@ def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool) -> None:
         temp_excel_file = fp.getvalue()
 
     megafon_send_email(mail_dfs, tag, template_dir, template, to, cc, temp_excel_file)
+
+
+if __name__ == "__main__":
+    pass
