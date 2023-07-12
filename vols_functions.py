@@ -5,7 +5,7 @@ import datetime
 import os
 import sys
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import List
 
 import pandas as pd
@@ -23,8 +23,9 @@ from gdc_vols import PROGRAM_NAME, PROGRAM_VERSION
 
 load_dotenv()
 
+# Чтение переменных окружения
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
-EMAIL_PASSWORD = base64.b85decode(os.getenv('EMAIL_PASSWORD').encode('UTF-8')).decode('UTF-8')
+EMAIL_PASSWORD = base64.b64decode(base64.b85decode(os.getenv('EMAIL_PASSWORD').encode('UTF-8'))).decode('UTF-8')
 my_email = EMAIL_ADDRESS
 
 config_file = 'gdc_vols.ini'
