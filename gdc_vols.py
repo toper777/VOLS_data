@@ -458,12 +458,10 @@ def main():
 
     df = pd.concat([main_build_df, ext_build_df], ignore_index=True).reset_index(drop=True)
 
-
     build_dashboard_data = df.copy(deep=True)
     tz_build_dataframe = df[df[process_columns['tz_status']] != 'Исполнена']
     sending_po_build_dataframe = df[df[process_columns['send_tz_status']] != 'Исполнена']
     received_po_build_dataframe = df[df[process_columns['received_tz_status']] != 'Исполнена']
-
 
     ws['B2'] = main_build_df[process_columns['plan_date']].count()
     ws['B2'].font = fn_bold
@@ -824,6 +822,7 @@ def main():
     except Exception as ex:
         logger.error(f'Ошибка сохранения файла файла: {ex}')
         sys.exit(2)
+
 
 if __name__ == '__main__':
     main()
