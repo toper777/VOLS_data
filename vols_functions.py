@@ -223,7 +223,7 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     if cc_address:
         report_email.cc = cc_address
     # Send the report
-    print(f'Send email "{tag}" to: {to_address} and copy: {cc_address}')
+    print(f'Send email {Color.GREEN}"{tag}"{Color.END} to: {Color.GREEN}{to_address}{Color.END} and copy: {Color.GREEN}{cc_address}{Color.END}')
     report_email.send(
         subject=f'[automated mailing system] {tag}',
         html_template=template_name,

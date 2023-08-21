@@ -12,7 +12,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.3"
+PROGRAM_VERSION: str = "0.6.4"
 
 
 def main():
