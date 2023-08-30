@@ -1,5 +1,6 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import argparse
+import datetime
 import locale
 import threading
 
@@ -12,7 +13,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.4"
+PROGRAM_VERSION: str = "0.6.5"
 
 
 def main():
@@ -40,6 +41,7 @@ def main():
     fn_red_bold = Font(color="FF0000", bold=True)
     fn_red = Font(color="B22222")
     fn_green = Font(color="006400")
+    fn_green_bold = Font(color="006400", bold=True)
     fn_mag = Font(color="6633FF")
     # bd = Side(style='thick', color="000000")
     fill_red = PatternFill(start_color='FFCCCC', end_color='FFCCCC', fill_type='solid')
@@ -118,6 +120,8 @@ def main():
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
         f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
     }
+
+    last_update_url = "https://gdc-rts/api/dashboard/upd/fn_2023_FOCL_Plan_Build_City()"
 
     data_sheets = {
         'city_main_build': f'Осн. стр. гор.ВОЛС {process_year}',
@@ -225,6 +229,11 @@ def main():
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
+    date_last_update = get_update_date(last_update_url)
+    if (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update)) > datetime.timedelta(hours=30):
+        if input(f'{Color.RED}Данные на портале старше 30 часов! Хотите продолжить обработку данных (y/n)?{Color.END}').lower() != 'y':
+            sys.exit(12)
+
     for sheet, url in urls.items():
         data_frame = read_from_dashboard(url)  # Читаем данные из сети
         data_frame = data_frame[
@@ -278,6 +287,11 @@ def main():
         ws = wb.create_sheet(title=report_sheets['report'])
 
     # Формирование статических полей отчёта
+    if date_last_update is not None:
+        ws['K1'] = "Дата обновления данных"
+        ws['L1'] = datetime.datetime.fromisoformat(date_last_update).strftime("%d.%m.%Y %H:%M:%S")
+        ws['L1'].font = fn_green_bold
+        ws['L1'].alignment = align_center
     ws['A1'] = "Основное строительство ВОЛС"
     ws['A1'].font = fn_red_bold
     ws['A1'].border = border_thin

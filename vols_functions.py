@@ -2,8 +2,10 @@
 import base64
 import configparser
 import datetime
+import json
 import os
 import sys
+import urllib.request
 from io import BytesIO
 from pathlib import Path, PurePath
 from typing import List
@@ -89,6 +91,19 @@ def read_from_dashboard(_url):
         print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(1)
     return _dashboard_data
+
+
+def get_update_date(_url):
+    """Читает дату обновления через API из url и возвращает ее."""
+
+    print(f'Получаем дату обновления данных из: "{_url}"')
+    try:
+        response = urllib.request.urlopen(_url)
+        data_json = json.load(response)
+    except Exception as e:
+        print(f"ERROR: can't read data from url {_url}. {e}")
+        sys.exit(3)
+    return data_json[0]['DATE_LAST_UPDATE']
 
 
 def write_dataframe_to_file(_data_frame, _file_name, _sheet):
