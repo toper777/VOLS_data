@@ -13,7 +13,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.5"
+PROGRAM_VERSION: str = "0.6.6"
 
 
 def main():
@@ -223,7 +223,7 @@ def main():
         process_columns['complete_date']: 'Факт',
     }
 
-    print(f'{PROGRAM_NAME}: {PROGRAM_VERSION}')
+    print(f'{Color.DARKCYAN}{datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}:{Color.END} {PROGRAM_NAME}: {PROGRAM_VERSION}')
 
     wb = FormattedWorkbook(logging_level=logger_level, properties_creator=EMAIL_ADDRESS)
     ws_first = wb.active
