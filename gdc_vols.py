@@ -1,11 +1,9 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import argparse
-import datetime
 import locale
 import threading
 
 import openpyxl.styles.borders as borders_style
-import pandas as pd
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 
@@ -13,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.6"
+PROGRAM_VERSION: str = "0.6.7"
 
 
 def main():
