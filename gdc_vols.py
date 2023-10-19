@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.7"
+PROGRAM_VERSION: str = "0.6.8"
 
 
 def main():
@@ -420,6 +420,50 @@ def main():
     ws['H9'].alignment = align_center
     ws['H9'].border = border_medium
 
+    # Поля для целевых мероприятий по BaseCase
+    ws['A41'] = "Целевые мероприятия \"Best Case\" ВОЛС"
+    ws['A41'].font = fn_red_bold
+    ws['A41'].border = border_thin
+    ws['A42'] = 'Всего мероприятий'
+    ws['A42'].border = border_medium
+    ws['A44'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
+    ws['A44'].font = fn_red_bold
+    ws['A44'].border = border_thin
+    ws['A46'] = 'Учтенных ВОЛС в KPI'
+    ws['A46'].border = border_medium
+    ws['A48'] = 'Исполнение мероприятий в ЕСУП'
+    ws['A48'].font = fn_red_bold
+    ws['A48'].border = border_thin
+    ws['A49'] = 'Наименование мероприятия'
+    ws['A49'].font = fn_bold
+    ws['A49'].border = border_medium
+    ws['A50'] = 'Выпущены ТЗ'
+    ws['A50'].border = border_medium
+    ws['A51'] = 'Переданы ТЗ в ПО'
+    ws['A51'].border = border_medium
+    ws['A52'] = 'Приняты ТЗ ПО'
+    ws['A52'].border = border_medium
+    ws['A53'] = 'Подписание договора на ПИР/ПИР+СМР'
+    ws['A53'].border = border_medium
+    ws['A54'] = 'Линейная схема'
+    ws['A54'].border = border_medium
+    ws['A55'] = 'Получено ТУ'
+    ws['A55'].border = border_medium
+    ws['A56'] = 'Строительство трассы'
+    ws['A56'].border = border_medium
+    ws['A57'] = 'Подготовка актов КС-2,3'
+    ws['A57'].border = border_medium
+    ws['A58'] = 'Приёмка ВОЛС в эксплуатацию'
+    ws['A58'].border = border_medium
+    ws['B49'] = 'Выполнено'
+    ws['B49'].font = fn_bold
+    ws['B49'].alignment = align_center
+    ws['B49'].border = border_medium
+    ws['C49'] = DELTA_CHAR
+    ws['C49'].font = fn_bold
+    ws['C49'].alignment = align_center
+    ws['C49'].border = border_medium
+
     # Формирование динамических полей отчёта
     ws['B5'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['B5'].font = fn_bold
@@ -460,6 +504,20 @@ def main():
     ws['I5'].alignment = align_center
     ws['I5'].border = border_medium
 
+    ws['B45'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['B45'].font = fn_bold
+    ws['B45'].alignment = align_center
+    ws['B45'].border = border_medium
+    ws['C45'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['C45'].font = fn_bold
+    ws['C45'].alignment = align_center
+    ws['C45'].border = border_medium
+    ws['D45'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+    ws['D45'].font = fn_bold
+    ws['D45'].alignment = align_center
+    ws['D45'].border = border_medium
+
+
     # Анализ строительства ВОЛС
     # TODO: Необходимо переделать генерацию отчетной страницы на процедуры или классы
     df = extended_build_df.copy(deep=True)
@@ -469,6 +527,8 @@ def main():
     # ext_build_df = df
 
     df = pd.concat([main_build_df, ext_build_df], ignore_index=True).reset_index(drop=True)
+
+    kpi_build_df = main_build_df[main_build_df[process_columns['program']].str.match(r'.*Base Case.*')]
 
     build_dashboard_data = df.copy(deep=True)
     tz_build_dataframe = df[df[process_columns['tz_status']] != 'Исполнена']
@@ -527,6 +587,33 @@ def main():
     ws.conditional_formatting.add('D26', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
     ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
+    ws['B42'] = kpi_build_df[process_columns['plan_date']].count()
+    ws['B42'].font = fn_bold
+    ws['B42'].alignment = align_center
+    ws['B42'].border = border_medium
+    # ws['B46'] = sum_sort_month_events(kpi_build_df, process_columns['plan_date'], process_month, last_days_of_month)
+    ws['B46'] = kpi_build_df[(kpi_build_df[process_columns['plan_date']] != '') & (
+            kpi_build_df[process_columns['plan_date']] <= last_days_of_month[process_month])][process_columns['plan_date']].count()
+    ws['B46'].alignment = align_center
+    ws['B46'].border = border_medium
+    if not args.new_algorithm:
+        ws['C46'] = kpi_build_df[
+            (kpi_build_df[process_columns['commissioning_date']] != '') & (kpi_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (
+                    kpi_build_df[process_columns['ks2_date']] != '') & (kpi_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][
+            process_columns['commissioning_date']].count()
+    else:
+        ws['C46'] = kpi_build_df[(kpi_build_df[process_columns['complete_date']] != '') & (
+                kpi_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
+    ws['C46'].alignment = align_center
+    ws['C46'].border = border_medium
+    ws['D46'] = ws['C46'].value - ws['B46'].value
+    ws['D46'].alignment = align_center
+    ws['D46'].border = border_medium
+    ws.conditional_formatting.add('D46', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+    ws.conditional_formatting.add('D46', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+    ws.conditional_formatting.add('D46', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
+
+
     for i, process in zip(range(10, 19), ['tz_status',
                                           'send_tz_status',
                                           'received_tz_status',
@@ -566,6 +653,28 @@ def main():
         ws[f'C{i}'].border = border_medium
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+
+    for i, process in zip(range(50, 59), ['tz_status',
+                                          'send_tz_status',
+                                          'received_tz_status',
+                                          'pir_smr_status',
+                                          'line_scheme_status',
+                                          'tu_status',
+                                          'build_status',
+                                          'ks2_status',
+                                          'commissioning_status',
+                                          ]):
+        ws[f'B{i}'] = sum_sort_events(kpi_build_df, process_columns[process], ['Исполнена', 'Не требуется'])
+        ws[f'B{i}'].alignment = align_center
+        ws[f'B{i}'].border = border_medium
+    for i in range(50, 59):
+        ws[f'C{i}'] = ws[f'B{i}'].value - ws['B42'].value
+        ws[f'C{i}'].alignment = align_center
+        ws[f'C{i}'].border = border_medium
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+
+
 
     # Анализ реконструкции ВОЛС
     df = rec_df_

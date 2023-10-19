@@ -240,7 +240,7 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     # Send the report
     print(f'Send email {Color.GREEN}"{tag}"{Color.END} to: {Color.GREEN}{to_address}{Color.END} and copy: {Color.GREEN}{cc_address}{Color.END}')
     report_email.send(
-        subject=f'[automated mailing system] {tag}',
+        subject=f'[A.M.S.] {tag}',
         html_template=template_name,
         body_params={
             'title': tag,
