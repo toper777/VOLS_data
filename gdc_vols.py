@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.8"
+PROGRAM_VERSION: str = "0.6.9"
 
 
 def main():
@@ -142,7 +142,8 @@ def main():
     reports_data = {
         'tz': [f'ВОЛС. {report_sheets["tz"]}', "FOCL_no_TU", ['focl_no_tu', 'cc_focl_no_tu'], 'focl_no_tu.html'],
         'sending_po': [f'ВОЛС. {report_sheets["sending_po"]}', "FOCL_no_TU_to_PO", ['focl_no_tu_to_po', 'cc_focl_no_tu_to_po'], 'focl_no_tu_to_po.html'],
-        'received_po': [f'ВОЛС. {report_sheets["received_po"]}', "FOCL_TU_not_received_by_PO", ['focl_tu_not_received_by_po', 'cc_focl_tu_not_received_by_po'], 'focl_tu_not_received_by_po.html'],
+        'received_po': [f'ВОЛС. {report_sheets["received_po"]}', "FOCL_TU_not_received_by_PO", ['focl_tu_not_received_by_po', 'cc_focl_tu_not_received_by_po'],
+                        'focl_tu_not_received_by_po.html'],
     }
 
     excel_tables_names = {
@@ -421,7 +422,7 @@ def main():
     ws['H9'].border = border_medium
 
     # Поля для целевых мероприятий по BaseCase
-    ws['A41'] = "Целевые мероприятия \"Best Case\" ВОЛС"
+    ws['A41'] = "Целевые мероприятия \"BaseCase\" ВОЛС"
     ws['A41'].font = fn_red_bold
     ws['A41'].border = border_thin
     ws['A42'] = 'Всего мероприятий'
@@ -516,7 +517,6 @@ def main():
     ws['D45'].font = fn_bold
     ws['D45'].alignment = align_center
     ws['D45'].border = border_medium
-
 
     # Анализ строительства ВОЛС
     # TODO: Необходимо переделать генерацию отчетной страницы на процедуры или классы
@@ -613,7 +613,6 @@ def main():
     ws.conditional_formatting.add('D46', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
     ws.conditional_formatting.add('D46', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
-
     for i, process in zip(range(10, 19), ['tz_status',
                                           'send_tz_status',
                                           'received_tz_status',
@@ -673,8 +672,6 @@ def main():
         ws[f'C{i}'].border = border_medium
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-
-
 
     # Анализ реконструкции ВОЛС
     df = rec_df_
@@ -740,14 +737,20 @@ def main():
     else:
         curr_month_bool_mask = (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) | (
-        ~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
+    if not args.new_algorithm:
+        curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) | (
+            ~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
+    else:
+        curr_status_bool_mask = ((build_dashboard_data[process_columns['complete_date']].isna()) & (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month]))
+
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_build_dataframe = current_month_build_dataframe[[process_columns['id'],
                                                                    process_columns['region'],
                                                                    process_columns['name'],
-                                                                   process_columns['plan_date']]]
+                                                                   process_columns['plan_date'],
+                                                                   process_columns['program'],
+                                                                   ]]
     current_month_build_dataframe[BP] = BP_BUILD
 
     # маска для текущего месяца
@@ -756,14 +759,20 @@ def main():
     else:
         curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
     # маска для не "Исполнена" или не "Не требуется"
-    curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) | (
-        ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
+    if not args.new_algorithm:
+        curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) | (
+            ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
+    else:
+        curr_status_bool_mask = (rec_df[process_columns['complete_date2']].isna()) & (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month])
+
     # Выборка объектов реконструкции по маскам
     current_month_reconstruction_dataframe = rec_df[curr_month_bool_mask & curr_status_bool_mask]
     current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
                                                                                      process_columns['region'],
                                                                                      process_columns['name'],
-                                                                                     process_columns['plan_date']]]
+                                                                                     process_columns['plan_date'],
+                                                                                     process_columns['program'],
+                                                                                     ]]
     current_month_reconstruction_dataframe[BP] = BP_RECON  # Добавляем столбец с названием бизнес-процесса
 
     # Объединяем стройку и реконструкцию
@@ -779,12 +788,16 @@ def main():
     tz_build_dataframe = tz_build_dataframe[[process_columns['id'],
                                              process_columns['region'],
                                              process_columns['name'],
-                                             process_columns['plan_date']]]
+                                             process_columns['plan_date'],
+                                             process_columns['program'],
+                                             ]]
     tz_build_dataframe[BP] = BP_BUILD
     tz_rec_df = tz_rec_df[[process_columns['id'],
                            process_columns['region'],
                            process_columns['name'],
-                           process_columns['plan_date']]]
+                           process_columns['plan_date'],
+                           process_columns['program'],
+                           ]]
     tz_rec_df[BP] = BP_RECON
     # Объединяем ТЗ стройки и реконструкции
     tz_dataframe = pd.concat([tz_build_dataframe, tz_rec_df], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
@@ -802,12 +815,16 @@ def main():
     sending_po_build_dataframe = sending_po_build_dataframe[[process_columns['id'],
                                                              process_columns['region'],
                                                              process_columns['name'],
-                                                             process_columns['plan_date']]]
+                                                             process_columns['plan_date'],
+                                                             process_columns['program'],
+                                                             ]]
     sending_po_build_dataframe[BP] = BP_BUILD
     sending_po_rec_df = sending_po_rec_df[[process_columns['id'],
                                            process_columns['region'],
                                            process_columns['name'],
-                                           process_columns['plan_date']]]
+                                           process_columns['plan_date'],
+                                           process_columns['program'],
+                                           ]]
     sending_po_rec_df[BP] = BP_RECON
     # Объединяем передачу ТЗ в ПО стройки и реконструкции
     sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_rec_df], ignore_index=True).reset_index(drop=True)
@@ -828,13 +845,17 @@ def main():
     received_po_build_dataframe = received_po_build_dataframe[[process_columns['id'],
                                                                process_columns['region'],
                                                                process_columns['name'],
-                                                               process_columns['plan_date']]]
+                                                               process_columns['plan_date'],
+                                                               process_columns['program'],
+                                                               ]]
     received_po_build_dataframe[BP] = BP_BUILD
 
     received_po_rec_df = received_po_rec_df[[process_columns['id'],
                                              process_columns['region'],
                                              process_columns['name'],
-                                             process_columns['plan_date']]]
+                                             process_columns['plan_date'],
+                                             process_columns['program'],
+                                             ]]
     received_po_rec_df[BP] = BP_RECON
     # Объединяем не принято в ПО стройки и реконструкции
     received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_rec_df], ignore_index=True).reset_index(drop=True)
