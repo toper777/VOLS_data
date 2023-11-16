@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.9"
+PROGRAM_VERSION: str = "0.6.10"
 
 
 def main():
@@ -229,8 +229,9 @@ def main():
 
     # Получение исходных данных и запись форматированных данных
     date_last_update = get_update_date(last_update_url)
-    if (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update)) > datetime.timedelta(hours=30):
-        if input(f'{Color.RED}Данные на портале старше 30 часов! Хотите продолжить обработку данных (y/n)?{Color.END}').lower() != 'y':
+    data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
+    if data_update_age > datetime.timedelta(hours=30):
+        if input(f'{Color.RED}Данные на портале обновлялись {data_update_age.days*24 + data_update_age.seconds/3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
             sys.exit(12)
 
     for sheet, url in urls.items():
