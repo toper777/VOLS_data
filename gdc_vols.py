@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.10"
+PROGRAM_VERSION: str = "0.6.11"
 
 
 def main():
@@ -98,7 +98,7 @@ def main():
         work_branch = args.report_branch
 
     if args.report_file is None:
-        vols_dir = Path('//megafon.ru/KVK/KRN/Files/TelegrafFiles/ОПРС/!Проекты РЦРП/Блок №4/ВОЛС', str(process_year))
+        vols_dir = Path('//megafon.ru/KVK/KRN/Files/TelegrafFiles/ОПРС/!Проекты РЦРП/Блок №3/ВОЛС', str(process_year))
         vols_file = f'{today_date} Отчет по строительству и реконструкции ВОЛС {"".join(symbol[0].upper() for symbol in work_branch.split())} {datetime.date(process_year, process_month, 1).strftime("%m.%Y")}{file_suffix}.xlsx'
         file_name = Path(vols_dir, vols_file)
     else:
