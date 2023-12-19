@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.11"
+PROGRAM_VERSION: str = "0.6.12"
 
 
 def main():
@@ -134,7 +134,7 @@ def main():
         'current_month': f'Активные мероприятия {datetime.date(process_year, process_month, 1).strftime("%m.%Y") if not args.active_year else process_year}',
         'tz': 'Нет ТЗ',
         'sending_po': "Нет передачи ТЗ в ПО",
-        'received_po': 'Не приняты ТЗ ПО',
+        'received_po': 'ПО не приняли ТЗ в ЕСУП',
         'soc_build': 'Соц.соревнование. Стр.',
         'soc_rec': 'Соц. соревнование. Рек.',
     }
