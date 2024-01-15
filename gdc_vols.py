@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.12"
+PROGRAM_VERSION: str = "0.6.13"
 
 
 def main():
@@ -30,6 +30,8 @@ def main():
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     last_days_of_month = {}
+    ext_build_df = None
+    rec_df_ = None
 
     # Set local localization
     locale.setlocale(locale.LC_ALL, '')
@@ -113,10 +115,10 @@ def main():
     urls = {
         # f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City',
-        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
-        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
+        # f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
+        # f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
+        # f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
     }
 
     last_update_url = "https://gdc-rts/api/dashboard/upd/fn_2023_FOCL_Plan_Build_City()"
@@ -335,92 +337,94 @@ def main():
     ws['C9'].alignment = align_center
     ws['C9'].border = border_medium
 
-    ws['A21'] = "Дополнительное строительство ВОЛС"
-    ws['A21'].font = fn_red_bold
-    ws['A21'].border = border_thin
-    ws['A22'] = 'Всего мероприятий'
-    ws['A22'].border = border_medium
-    ws['A24'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
-    ws['A24'].font = fn_red_bold
-    ws['A24'].border = border_thin
-    ws['A26'] = 'Учтенных ВОЛС в KPI'
-    ws['A26'].border = border_medium
-    ws['A28'] = 'Исполнение мероприятий в ЕСУП'
-    ws['A28'].font = fn_red_bold
-    ws['A28'].border = border_thin
-    ws['A29'] = 'Наименование мероприятия'
-    ws['A29'].font = fn_bold
-    ws['A29'].border = border_medium
-    ws['A30'] = 'Выпущены ТЗ'
-    ws['A30'].border = border_medium
-    ws['A31'] = 'Переданы ТЗ в ПО'
-    ws['A31'].border = border_medium
-    ws['A32'] = 'Приняты ТЗ ПО'
-    ws['A32'].border = border_medium
-    ws['A33'] = 'Подписание договора на ПИР/ПИР+СМР'
-    ws['A33'].border = border_medium
-    ws['A34'] = 'Линейная схема'
-    ws['A34'].border = border_medium
-    ws['A35'] = 'Получено ТУ'
-    ws['A35'].border = border_medium
-    ws['A36'] = 'Строительство трассы'
-    ws['A36'].border = border_medium
-    ws['A37'] = 'Подготовка актов КС-2,3'
-    ws['A37'].border = border_medium
-    ws['A38'] = 'Приёмка ВОЛС в эксплуатацию'
-    ws['A38'].border = border_medium
-    ws['B29'] = 'Выполнено'
-    ws['B29'].font = fn_bold
-    ws['B29'].alignment = align_center
-    ws['B29'].border = border_medium
-    ws['C29'] = DELTA_CHAR
-    ws['C29'].font = fn_bold
-    ws['C29'].alignment = align_center
-    ws['C29'].border = border_medium
+    if ext_build_df is not None:
+        ws['A21'] = "Дополнительное строительство ВОЛС"
+        ws['A21'].font = fn_red_bold
+        ws['A21'].border = border_thin
+        ws['A22'] = 'Всего мероприятий'
+        ws['A22'].border = border_medium
+        ws['A24'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
+        ws['A24'].font = fn_red_bold
+        ws['A24'].border = border_thin
+        ws['A26'] = 'Учтенных ВОЛС в KPI'
+        ws['A26'].border = border_medium
+        ws['A28'] = 'Исполнение мероприятий в ЕСУП'
+        ws['A28'].font = fn_red_bold
+        ws['A28'].border = border_thin
+        ws['A29'] = 'Наименование мероприятия'
+        ws['A29'].font = fn_bold
+        ws['A29'].border = border_medium
+        ws['A30'] = 'Выпущены ТЗ'
+        ws['A30'].border = border_medium
+        ws['A31'] = 'Переданы ТЗ в ПО'
+        ws['A31'].border = border_medium
+        ws['A32'] = 'Приняты ТЗ ПО'
+        ws['A32'].border = border_medium
+        ws['A33'] = 'Подписание договора на ПИР/ПИР+СМР'
+        ws['A33'].border = border_medium
+        ws['A34'] = 'Линейная схема'
+        ws['A34'].border = border_medium
+        ws['A35'] = 'Получено ТУ'
+        ws['A35'].border = border_medium
+        ws['A36'] = 'Строительство трассы'
+        ws['A36'].border = border_medium
+        ws['A37'] = 'Подготовка актов КС-2,3'
+        ws['A37'].border = border_medium
+        ws['A38'] = 'Приёмка ВОЛС в эксплуатацию'
+        ws['A38'].border = border_medium
+        ws['B29'] = 'Выполнено'
+        ws['B29'].font = fn_bold
+        ws['B29'].alignment = align_center
+        ws['B29'].border = border_medium
+        ws['C29'] = DELTA_CHAR
+        ws['C29'].font = fn_bold
+        ws['C29'].alignment = align_center
+        ws['C29'].border = border_medium
 
-    ws['F1'] = "Реконструкция ВОЛС"
-    ws['F1'].font = fn_red_bold
-    ws['F1'].border = border_thin
-    ws['F2'] = 'Всего мероприятий'
-    ws['F2'].border = border_medium
-    ws['F2'].border = border_medium
-    ws['F4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
-    ws['F4'].font = fn_red_bold
-    ws['F4'].border = border_thin
-    ws['F6'] = 'Учтенных ВОЛС в KPI'
-    ws['F6'].border = border_medium
-    ws['F8'] = 'Исполнение мероприятий в ЕСУП'
-    ws['F8'].font = fn_red_bold
-    ws['F8'].border = border_thin
-    ws['F9'] = 'Наименование мероприятия'
-    ws['F9'].font = fn_bold
-    ws['F9'].border = border_medium
-    ws['F10'] = 'Выпущены ТЗ'
-    ws['F10'].border = border_medium
-    ws['F11'] = 'Переданы ТЗ в ПО'
-    ws['F11'].border = border_medium
-    ws['F12'] = 'Приняты ТЗ ПО'
-    ws['F12'].border = border_medium
-    ws['F13'] = 'Подписание договора на ПИР/ПИР+СМР'
-    ws['F13'].border = border_medium
-    ws['F14'] = 'Линейная схема'
-    ws['F14'].border = border_medium
-    ws['F15'] = 'Получено ТУ'
-    ws['F15'].border = border_medium
-    ws['F16'] = 'Строительство трассы'
-    ws['F16'].border = border_medium
-    ws['F17'] = 'Подготовка актов КС-2,3'
-    ws['F17'].border = border_medium
-    ws['F18'] = 'Приёмка ВОЛС в эксплуатацию'
-    ws['F18'].border = border_medium
-    ws['G9'] = 'Выполнено'
-    ws['G9'].font = fn_bold
-    ws['G9'].alignment = align_center
-    ws['G9'].border = border_medium
-    ws['H9'] = DELTA_CHAR
-    ws['H9'].font = fn_bold
-    ws['H9'].alignment = align_center
-    ws['H9'].border = border_medium
+    if rec_df_ is not None:
+        ws['F1'] = "Реконструкция ВОЛС"
+        ws['F1'].font = fn_red_bold
+        ws['F1'].border = border_thin
+        ws['F2'] = 'Всего мероприятий'
+        ws['F2'].border = border_medium
+        ws['F2'].border = border_medium
+        ws['F4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
+        ws['F4'].font = fn_red_bold
+        ws['F4'].border = border_thin
+        ws['F6'] = 'Учтенных ВОЛС в KPI'
+        ws['F6'].border = border_medium
+        ws['F8'] = 'Исполнение мероприятий в ЕСУП'
+        ws['F8'].font = fn_red_bold
+        ws['F8'].border = border_thin
+        ws['F9'] = 'Наименование мероприятия'
+        ws['F9'].font = fn_bold
+        ws['F9'].border = border_medium
+        ws['F10'] = 'Выпущены ТЗ'
+        ws['F10'].border = border_medium
+        ws['F11'] = 'Переданы ТЗ в ПО'
+        ws['F11'].border = border_medium
+        ws['F12'] = 'Приняты ТЗ ПО'
+        ws['F12'].border = border_medium
+        ws['F13'] = 'Подписание договора на ПИР/ПИР+СМР'
+        ws['F13'].border = border_medium
+        ws['F14'] = 'Линейная схема'
+        ws['F14'].border = border_medium
+        ws['F15'] = 'Получено ТУ'
+        ws['F15'].border = border_medium
+        ws['F16'] = 'Строительство трассы'
+        ws['F16'].border = border_medium
+        ws['F17'] = 'Подготовка актов КС-2,3'
+        ws['F17'].border = border_medium
+        ws['F18'] = 'Приёмка ВОЛС в эксплуатацию'
+        ws['F18'].border = border_medium
+        ws['G9'] = 'Выполнено'
+        ws['G9'].font = fn_bold
+        ws['G9'].alignment = align_center
+        ws['G9'].border = border_medium
+        ws['H9'] = DELTA_CHAR
+        ws['H9'].font = fn_bold
+        ws['H9'].alignment = align_center
+        ws['H9'].border = border_medium
 
     # Поля для целевых мероприятий по BaseCase
     ws['A41'] = "Целевые мероприятия \"BaseCase\" ВОЛС"
@@ -480,31 +484,33 @@ def main():
     ws['D5'].alignment = align_center
     ws['D5'].border = border_medium
 
-    ws['B25'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
-    ws['B25'].font = fn_bold
-    ws['B25'].alignment = align_center
-    ws['B25'].border = border_medium
-    ws['C25'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
-    ws['C25'].font = fn_bold
-    ws['C25'].alignment = align_center
-    ws['C25'].border = border_medium
-    ws['D25'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
-    ws['D25'].font = fn_bold
-    ws['D25'].alignment = align_center
-    ws['D25'].border = border_medium
+    if ext_build_df is not None:
+        ws['B25'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+        ws['B25'].font = fn_bold
+        ws['B25'].alignment = align_center
+        ws['B25'].border = border_medium
+        ws['C25'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+        ws['C25'].font = fn_bold
+        ws['C25'].alignment = align_center
+        ws['C25'].border = border_medium
+        ws['D25'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+        ws['D25'].font = fn_bold
+        ws['D25'].alignment = align_center
+        ws['D25'].border = border_medium
 
-    ws['G5'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
-    ws['G5'].font = fn_bold
-    ws['G5'].alignment = align_center
-    ws['G5'].border = border_medium
-    ws['H5'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
-    ws['H5'].font = fn_bold
-    ws['H5'].alignment = align_center
-    ws['H5'].border = border_medium
-    ws['I5'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
-    ws['I5'].font = fn_bold
-    ws['I5'].alignment = align_center
-    ws['I5'].border = border_medium
+    if rec_df_ is not None:
+        ws['G5'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+        ws['G5'].font = fn_bold
+        ws['G5'].alignment = align_center
+        ws['G5'].border = border_medium
+        ws['H5'] = f'Факт, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+        ws['H5'].font = fn_bold
+        ws['H5'].alignment = align_center
+        ws['H5'].border = border_medium
+        ws['I5'] = f'{chr(0x0394)}, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
+        ws['I5'].font = fn_bold
+        ws['I5'].alignment = align_center
+        ws['I5'].border = border_medium
 
     ws['B45'] = f'План, {datetime.date(process_year, process_month, 1).strftime("%b %Y")}'
     ws['B45'].font = fn_bold
@@ -527,7 +533,8 @@ def main():
     # main_build_df = df
     # ext_build_df = df
 
-    df = pd.concat([main_build_df, ext_build_df], ignore_index=True).reset_index(drop=True)
+    if ext_build_df is not None:
+        df = pd.concat([main_build_df, ext_build_df], ignore_index=True).reset_index(drop=True)
 
     kpi_build_df = main_build_df[main_build_df[process_columns['program']].str.match(r'.*Base Case.*')]
 
@@ -562,31 +569,32 @@ def main():
     ws.conditional_formatting.add('D6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
     ws.conditional_formatting.add('D6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
-    ws['B22'] = ext_build_df[process_columns['plan_date']].count()
-    ws['B22'].font = fn_bold
-    ws['B22'].alignment = align_center
-    ws['B22'].border = border_medium
-    # ws['B26'] = sum_sort_month_events(ext_build_df, process_columns['plan_date'], process_month, last_days_of_month)
-    ws['B26'] = ext_build_df[(ext_build_df[process_columns['plan_date']] != '') & (
-            ext_build_df[process_columns['plan_date']] <= last_days_of_month[process_month])][process_columns['plan_date']].count()
-    ws['B26'].alignment = align_center
-    ws['B26'].border = border_medium
-    if not args.new_algorithm:
-        ws['C26'] = ext_build_df[
-            (ext_build_df[process_columns['commissioning_date']] != '') & (ext_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (
-                    ext_build_df[process_columns['ks2_date']] != '') & (ext_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][
-            process_columns['commissioning_date']].count()
-    else:
-        ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (
-                ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
-    ws['C26'].alignment = align_center
-    ws['C26'].border = border_medium
-    ws['D26'] = ws['C26'].value - ws['B26'].value
-    ws['D26'].alignment = align_center
-    ws['D26'].border = border_medium
-    ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-    ws.conditional_formatting.add('D26', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-    ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
+    if ext_build_df is not None:
+        ws['B22'] = ext_build_df[process_columns['plan_date']].count()
+        ws['B22'].font = fn_bold
+        ws['B22'].alignment = align_center
+        ws['B22'].border = border_medium
+        # ws['B26'] = sum_sort_month_events(ext_build_df, process_columns['plan_date'], process_month, last_days_of_month)
+        ws['B26'] = ext_build_df[(ext_build_df[process_columns['plan_date']] != '') & (
+                ext_build_df[process_columns['plan_date']] <= last_days_of_month[process_month])][process_columns['plan_date']].count()
+        ws['B26'].alignment = align_center
+        ws['B26'].border = border_medium
+        if not args.new_algorithm:
+            ws['C26'] = ext_build_df[
+                (ext_build_df[process_columns['commissioning_date']] != '') & (ext_build_df[process_columns['commissioning_date']] <= last_days_of_month[process_month]) & (
+                        ext_build_df[process_columns['ks2_date']] != '') & (ext_build_df[process_columns['ks2_date']] <= last_days_of_month[process_month])][
+                process_columns['commissioning_date']].count()
+        else:
+            ws['C26'] = ext_build_df[(ext_build_df[process_columns['complete_date']] != '') & (
+                    ext_build_df[process_columns['complete_date']] <= last_days_of_month[process_month])][process_columns['complete_date']].count()
+        ws['C26'].alignment = align_center
+        ws['C26'].border = border_medium
+        ws['D26'] = ws['C26'].value - ws['B26'].value
+        ws['D26'].alignment = align_center
+        ws['D26'].border = border_medium
+        ws.conditional_formatting.add('D26', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add('D26', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add('D26', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
     ws['B42'] = kpi_build_df[process_columns['plan_date']].count()
     ws['B42'].font = fn_bold
@@ -634,25 +642,26 @@ def main():
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
 
-    for i, process in zip(range(30, 39), ['tz_status',
-                                          'send_tz_status',
-                                          'received_tz_status',
-                                          'pir_smr_status',
-                                          'line_scheme_status',
-                                          'tu_status',
-                                          'build_status',
-                                          'ks2_status',
-                                          'commissioning_status',
-                                          ]):
-        ws[f'B{i}'] = sum_sort_events(ext_build_df, process_columns[process], ['Исполнена', 'Не требуется'])
-        ws[f'B{i}'].alignment = align_center
-        ws[f'B{i}'].border = border_medium
-    for i in range(30, 39):
-        ws[f'C{i}'] = ws[f'B{i}'].value - ws['B22'].value
-        ws[f'C{i}'].alignment = align_center
-        ws[f'C{i}'].border = border_medium
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-        ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        if ext_build_df is not None:
+            for i, process in zip(range(30, 39), ['tz_status',
+                                                  'send_tz_status',
+                                                  'received_tz_status',
+                                                  'pir_smr_status',
+                                                  'line_scheme_status',
+                                                  'tu_status',
+                                                  'build_status',
+                                                  'ks2_status',
+                                                  'commissioning_status',
+                                                  ]):
+                ws[f'B{i}'] = sum_sort_events(ext_build_df, process_columns[process], ['Исполнена', 'Не требуется'])
+                ws[f'B{i}'].alignment = align_center
+                ws[f'B{i}'].border = border_medium
+            for i in range(30, 39):
+                ws[f'C{i}'] = ws[f'B{i}'].value - ws['B22'].value
+                ws[f'C{i}'].alignment = align_center
+                ws[f'C{i}'].border = border_medium
+                ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+                ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
 
     for i, process in zip(range(50, 59), ['tz_status',
                                           'send_tz_status',
@@ -675,58 +684,59 @@ def main():
         ws.conditional_formatting.add(f'C{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
 
     # Анализ реконструкции ВОЛС
-    df = rec_df_
-    rec_df = df
-    tz_rec_df = df[df[process_columns['tz_status2']] != 'Исполнена']
-    sending_po_rec_df = df[df[process_columns['send_tz_status2']] != 'Исполнена']
-    received_po_rec_df = df[df[process_columns['received_tz_status2']] != 'Исполнена']
+    if rec_df_ is not None:
+        df = rec_df_
+        rec_df = df
+        tz_rec_df = df[df[process_columns['tz_status2']] != 'Исполнена']
+        sending_po_rec_df = df[df[process_columns['send_tz_status2']] != 'Исполнена']
+        received_po_rec_df = df[df[process_columns['received_tz_status2']] != 'Исполнена']
 
-    ws['G2'] = df[process_columns['plan_date']].count()
-    ws['G2'].font = fn_bold
-    ws['G2'].alignment = align_center
-    ws['G2'].border = border_medium
-    # ws['G6'] = sum_sort_month_events(df, process_columns['plan_date'], process_month, last_days_of_month)
-    ws['G6'] = rec_df[(rec_df[process_columns['plan_date']] != '') & (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month])][
-        process_columns['plan_date']].count()
-    ws['G6'].alignment = align_center
-    ws['G6'].border = border_medium
-    if not args.new_algorithm:
-        ws['H6'] = rec_df[(rec_df[process_columns['commissioning_date2']] != '') & (
-                rec_df[process_columns['commissioning_date2']] <= last_days_of_month[process_month]) & (rec_df[process_columns['ks2_date2']] != '') & (
-                                  rec_df[process_columns['ks2_date2']] <= last_days_of_month[process_month])][process_columns['commissioning_date2']].count()
-    else:
-        ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][
-            process_columns['complete_date2']].count()
-    ws['H6'].alignment = align_center
-    ws['H6'].border = border_medium
+        ws['G2'] = df[process_columns['plan_date']].count()
+        ws['G2'].font = fn_bold
+        ws['G2'].alignment = align_center
+        ws['G2'].border = border_medium
+        # ws['G6'] = sum_sort_month_events(df, process_columns['plan_date'], process_month, last_days_of_month)
+        ws['G6'] = rec_df[(rec_df[process_columns['plan_date']] != '') & (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month])][
+            process_columns['plan_date']].count()
+        ws['G6'].alignment = align_center
+        ws['G6'].border = border_medium
+        if not args.new_algorithm:
+            ws['H6'] = rec_df[(rec_df[process_columns['commissioning_date2']] != '') & (
+                    rec_df[process_columns['commissioning_date2']] <= last_days_of_month[process_month]) & (rec_df[process_columns['ks2_date2']] != '') & (
+                                      rec_df[process_columns['ks2_date2']] <= last_days_of_month[process_month])][process_columns['commissioning_date2']].count()
+        else:
+            ws['H6'] = rec_df[(rec_df[process_columns['complete_date2']] != '') & (rec_df[process_columns['complete_date2']] <= last_days_of_month[process_month])][
+                process_columns['complete_date2']].count()
+        ws['H6'].alignment = align_center
+        ws['H6'].border = border_medium
 
-    ws['I6'] = ws['H6'].value - ws['G6'].value
-    ws['I6'].alignment = align_center
-    ws['I6'].border = border_medium
-    ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-    ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
+        ws['I6'] = ws['H6'].value - ws['G6'].value
+        ws['I6'].alignment = align_center
+        ws['I6'].border = border_medium
+        ws.conditional_formatting.add('I6', CellIsRule(operator='lessThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        ws.conditional_formatting.add('I6', CellIsRule(operator='greaterThan', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+        ws.conditional_formatting.add('I6', CellIsRule(operator='equal', formula=['0'], stopIfTrue=True, font=fn_mag, fill=fill_yellow))
 
-    for i, process in zip(range(10, 19), ['tz_status2',
-                                          'send_tz_status2',
-                                          'received_tz_status2',
-                                          'pir_smr_status2',
-                                          'line_scheme_status2',
-                                          'tu_status2',
-                                          'build_status2',
-                                          'ks2_status2',
-                                          'commissioning_status2']):
-        ws[f'G{i}'] = sum_sort_events(df, process_columns[process], ['Исполнена', 'Не требуется'])
-        ws[f'G{i}'].alignment = align_center
-        ws[f'G{i}'].border = border_medium
-        ws[f'G{i}'].border = border_medium
-    for i in range(10, 19):
-        ws[f'H{i}'] = ws[f'G{i}'].value - ws['G2'].value
-        # ws[f'H{i}'] = f'=G{i}-G2'
-        ws[f'H{i}'].alignment = align_center
-        ws[f'H{i}'].border = border_medium
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
-        ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
+        for i, process in zip(range(10, 19), ['tz_status2',
+                                              'send_tz_status2',
+                                              'received_tz_status2',
+                                              'pir_smr_status2',
+                                              'line_scheme_status2',
+                                              'tu_status2',
+                                              'build_status2',
+                                              'ks2_status2',
+                                              'commissioning_status2']):
+            ws[f'G{i}'] = sum_sort_events(df, process_columns[process], ['Исполнена', 'Не требуется'])
+            ws[f'G{i}'].alignment = align_center
+            ws[f'G{i}'].border = border_medium
+            ws[f'G{i}'].border = border_medium
+        for i in range(10, 19):
+            ws[f'H{i}'] = ws[f'G{i}'].value - ws['G2'].value
+            # ws[f'H{i}'] = f'=G{i}-G2'
+            ws[f'H{i}'].alignment = align_center
+            ws[f'H{i}'].border = border_medium
+            ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='greaterThanOrEqual', formula=['0'], stopIfTrue=True, font=fn_green, fill=fill_green))
+            ws.conditional_formatting.add(f'H{i}', CellIsRule(operator='lessThan', formula=['0'], stopIfTrue=True, font=fn_red, fill=fill_red))
     ws = adjust_columns_width(ws)
 
     # Создание листов для рассылки
@@ -755,30 +765,35 @@ def main():
     current_month_build_dataframe[BP] = BP_BUILD
 
     # маска для текущего месяца
-    if not args.active_year:
-        curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
-    else:
-        curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
-    # маска для не "Исполнена" или не "Не требуется"
-    if not args.new_algorithm:
-        curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) | (
-            ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
-    else:
-        curr_status_bool_mask = (rec_df[process_columns['complete_date2']].isna()) & (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month])
+    if rec_df_ is not None:
+        if not args.active_year:
+            curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month].strftime('%Y-%m-%d'))
+        else:
+            curr_month_bool_mask = (rec_df[process_columns['plan_date']] <= last_days_of_month[12].strftime('%Y-%m-%d'))
+        # маска для не "Исполнена" или не "Не требуется"
+        if not args.new_algorithm:
+            curr_status_bool_mask = (~rec_df[process_columns['commissioning_status2']].str.contains('Исполнена|Не требуется', regex=True)) | (
+                ~rec_df[process_columns['ks2_status2']].str.contains('Исполнена|Не требуется', regex=True))
+        else:
+            curr_status_bool_mask = (rec_df[process_columns['complete_date2']].isna()) & (rec_df[process_columns['plan_date']] <= last_days_of_month[process_month])
 
-    # Выборка объектов реконструкции по маскам
-    current_month_reconstruction_dataframe = rec_df[curr_month_bool_mask & curr_status_bool_mask]
-    current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
-                                                                                     process_columns['region'],
-                                                                                     process_columns['name'],
-                                                                                     process_columns['plan_date'],
-                                                                                     process_columns['program'],
-                                                                                     ]]
-    current_month_reconstruction_dataframe[BP] = BP_RECON  # Добавляем столбец с названием бизнес-процесса
+        # Выборка объектов реконструкции по маскам
+        current_month_reconstruction_dataframe = rec_df[curr_month_bool_mask & curr_status_bool_mask]
+        current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
+                                                                                         process_columns['region'],
+                                                                                         process_columns['name'],
+                                                                                         process_columns['plan_date'],
+                                                                                         process_columns['program'],
+                                                                                         ]]
+        current_month_reconstruction_dataframe[BP] = BP_RECON  # Добавляем столбец с названием бизнес-процесса
 
     # Объединяем стройку и реконструкцию
-    current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(
-        by=columns_for_sort)
+    if rec_df_ is not None:
+        current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(
+            by=columns_for_sort)
+    else:
+        current_month_dataframe = current_month_build_dataframe
+
     if not current_month_dataframe.empty:
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["current_month"]}"{Color.END}')
         wb.excel_format_table(current_month_dataframe, report_sheets['current_month'], excel_tables_names[report_sheets['current_month']])
@@ -793,15 +808,19 @@ def main():
                                              process_columns['program'],
                                              ]]
     tz_build_dataframe[BP] = BP_BUILD
-    tz_rec_df = tz_rec_df[[process_columns['id'],
-                           process_columns['region'],
-                           process_columns['name'],
-                           process_columns['plan_date'],
-                           process_columns['program'],
-                           ]]
-    tz_rec_df[BP] = BP_RECON
-    # Объединяем ТЗ стройки и реконструкции
-    tz_dataframe = pd.concat([tz_build_dataframe, tz_rec_df], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
+    if rec_df_ is not None:
+        tz_rec_df = tz_rec_df[[process_columns['id'],
+                               process_columns['region'],
+                               process_columns['name'],
+                               process_columns['plan_date'],
+                               process_columns['program'],
+                               ]]
+        tz_rec_df[BP] = BP_RECON
+        # Объединяем ТЗ стройки и реконструкции
+        tz_dataframe = pd.concat([tz_build_dataframe, tz_rec_df], ignore_index=True).reset_index(drop=True).sort_values(by=columns_for_sort)
+    else:
+        tz_dataframe = tz_build_dataframe
+
     # write_report_table_to_file(tz_dataframe, file_name, report_sheets['tz'], excel_tables_names, excel_cell_names,
     #                            table_style)
     if not tz_dataframe.empty:
@@ -820,16 +839,19 @@ def main():
                                                              process_columns['program'],
                                                              ]]
     sending_po_build_dataframe[BP] = BP_BUILD
-    sending_po_rec_df = sending_po_rec_df[[process_columns['id'],
-                                           process_columns['region'],
-                                           process_columns['name'],
-                                           process_columns['plan_date'],
-                                           process_columns['program'],
-                                           ]]
-    sending_po_rec_df[BP] = BP_RECON
-    # Объединяем передачу ТЗ в ПО стройки и реконструкции
-    sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_rec_df], ignore_index=True).reset_index(drop=True)
-    # Убираем мероприятия с не выданными ТЗ
+    if rec_df_ is not None:
+        sending_po_rec_df = sending_po_rec_df[[process_columns['id'],
+                                               process_columns['region'],
+                                               process_columns['name'],
+                                               process_columns['plan_date'],
+                                               process_columns['program'],
+                                               ]]
+        sending_po_rec_df[BP] = BP_RECON
+        # Объединяем передачу ТЗ в ПО стройки и реконструкции
+        sending_po_dataframe = pd.concat([sending_po_build_dataframe, sending_po_rec_df], ignore_index=True).reset_index(drop=True)
+    else:
+        sending_po_dataframe = sending_po_build_dataframe
+        # Убираем мероприятия с не выданными ТЗ
     sending_po_dataframe = pd.concat([sending_po_dataframe, tz_dataframe], ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
     # write_report_table_to_file(sending_po_dataframe, file_name, report_sheets['sending_po'], excel_tables_names,
     #                            excel_cell_names, table_style)
@@ -851,15 +873,18 @@ def main():
                                                                ]]
     received_po_build_dataframe[BP] = BP_BUILD
 
-    received_po_rec_df = received_po_rec_df[[process_columns['id'],
-                                             process_columns['region'],
-                                             process_columns['name'],
-                                             process_columns['plan_date'],
-                                             process_columns['program'],
-                                             ]]
-    received_po_rec_df[BP] = BP_RECON
-    # Объединяем не принято в ПО стройки и реконструкции
-    received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_rec_df], ignore_index=True).reset_index(drop=True)
+    if rec_df_ is not None:
+        received_po_rec_df = received_po_rec_df[[process_columns['id'],
+                                                 process_columns['region'],
+                                                 process_columns['name'],
+                                                 process_columns['plan_date'],
+                                                 process_columns['program'],
+                                                 ]]
+        received_po_rec_df[BP] = BP_RECON
+        # Объединяем не принято в ПО стройки и реконструкции
+        received_po_dataframe = pd.concat([received_po_build_dataframe, received_po_rec_df], ignore_index=True).reset_index(drop=True)
+    else:
+        received_po_dataframe = received_po_build_dataframe
     # Убираем мероприятия с не выданными ТЗ и не переданные в ПО
     received_po_dataframe = pd.concat([received_po_dataframe, sending_po_dataframe, tz_dataframe],
                                       ignore_index=True).drop_duplicates(keep=False).reset_index(drop=True).sort_values(by=columns_for_sort)
