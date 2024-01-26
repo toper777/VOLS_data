@@ -103,6 +103,7 @@ def get_update_date(_url):
     except Exception as e:
         print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(3)
+    print(f'Дата обновления данных на портале: {Color.DARKCYAN}{datetime.datetime.fromisoformat(data_json[0]["DATE_LAST_UPDATE"]).strftime("%d.%m.%Y %H:%M:%S")}{Color.END}')
     return data_json[0]['DATE_LAST_UPDATE']
 
 

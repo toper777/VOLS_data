@@ -11,7 +11,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.13"
+PROGRAM_VERSION: str = "0.6.14"
 
 
 def main():
@@ -70,7 +70,7 @@ def main():
     # Добавление суффикса к имени сохраняемого файла при задании режимов работы
     file_suffix = ''
     if any([args.new_algorithm, args.soc_report, args.active_year]):
-        file_suffix = f'{" [new-algorithm]" if args.new_algorithm else ""}{" [soc-report]" if args.soc_report else ""}{" [active-year]" if args.active_year else ""}'
+        file_suffix = f'{" (new-algorithm)" if args.new_algorithm else ""}{" (soc-report)" if args.soc_report else ""}{" (active-year])" if args.active_year else ""}'
 
     # Уровень отладочных сообщений
     if args.verbose is None or args.verbose == 1:
@@ -115,8 +115,8 @@ def main():
     urls = {
         # f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City',
-        # f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
-        # f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
+        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
+        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
         # f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
     }
