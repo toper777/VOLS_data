@@ -23,13 +23,6 @@ from FormattedWorkbook import FormattedWorkbook
 from gdc_vols import PROGRAM_NAME, PROGRAM_VERSION
 
 
-load_dotenv()
-
-# Чтение переменных окружения
-EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
-EMAIL_PASSWORD = base64.b64decode(base64.b85decode(os.getenv('EMAIL_PASSWORD').encode('UTF-8'))).decode('UTF-8')
-my_email = EMAIL_ADDRESS
-
 config_file = 'gdc_vols.ini'
 
 
@@ -222,7 +215,7 @@ def adjust_columns_width(_dataframe):
     return _dataframe
 
 
-def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes):
+def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes, email_address: str, email_password: str):
     """
     @param data_frame:  Таблица DataFrame с данными
     @param tag:  Заголовок для формирования темы письма
@@ -231,10 +224,12 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     @param to_address:  Список адресатов для письма
     @param cc_address:  Список адресатов для копии письма
     @param attachment_file: битовый массив c файлом Excel
+    @param email_address: e-mail адрес от имени которого высылается рассылка
+    @param email_password: Пароль для почтового сервера
     """
-    report_email = EmailSender(host='mail.megafon.ru', port=25, username=EMAIL_ADDRESS, password=EMAIL_PASSWORD, use_starttls=True)
+    report_email = EmailSender(host='mail.megafon.ru', port=25, username=email_address, password=email_password, use_starttls=True)
     report_email.set_template_paths(html=Path(template_directory, 'html'))
-    report_email.sender = EMAIL_ADDRESS
+    report_email.sender = email_address
     report_email.receivers = to_address
     if cc_address:
         report_email.cc = cc_address
@@ -255,7 +250,10 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     )
 
 
-def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool) -> None:
+def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool, email_address: str, email_password: str) -> None:
+
+    my_email = email_address
+
     config = configparser.ConfigParser()
     try:
         with open(config_file, mode='r') as fr:
@@ -284,7 +282,7 @@ def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool) -> None:
     # Формируем временный файл с форматированной Excel таблицей для рассылки
     with BytesIO() as fp:
         logger.info(f'Создаем рабочую книгу для временного файла')
-        mail_wb = FormattedWorkbook(properties_creator=EMAIL_ADDRESS)
+        mail_wb = FormattedWorkbook(properties_creator=email_address)
         mail_ws_first = mail_wb.active
         mail_wb.excel_format_table(dfs, tag, tab_name)
         logger.info(f'Удаляем лист {mail_ws_first}')
@@ -293,7 +291,7 @@ def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool) -> None:
         mail_wb.save(fp)
         temp_excel_file = fp.getvalue()
 
-    megafon_send_email(mail_dfs, tag, template_dir, template, to, cc, temp_excel_file)
+    megafon_send_email(mail_dfs, tag, template_dir, template, to, cc, temp_excel_file, email_address, email_password)
 
 
 if __name__ == "__main__":
