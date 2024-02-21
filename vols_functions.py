@@ -215,7 +215,7 @@ def adjust_columns_width(_dataframe):
     return _dataframe
 
 
-def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes, email_address: str, email_password: str):
+def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes, email_address: str, email_password: str, data_date: str):
     """
     @param data_frame:  Таблица DataFrame с данными
     @param tag:  Заголовок для формирования темы письма
@@ -226,6 +226,7 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     @param attachment_file: битовый массив c файлом Excel
     @param email_address: e-mail адрес от имени которого высылается рассылка
     @param email_password: Пароль для почтового сервера
+    @param data_date: Дата обновления данных с портала
     """
     report_email = EmailSender(host='mail.megafon.ru', port=25, username=email_address, password=email_password, use_starttls=True)
     report_email.set_template_paths(html=Path(template_directory, 'html'))
@@ -242,6 +243,7 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
             'title': tag,
             'prog': PROGRAM_NAME,
             'ver': PROGRAM_VERSION,
+            'data_date': datetime.datetime.fromisoformat(data_date).strftime("%d.%m.%Y %H:%M:%S"),
         },
         body_tables={"table": data_frame},
         attachments={
@@ -250,7 +252,7 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
     )
 
 
-def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool, email_address: str, email_password: str) -> None:
+def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool, email_address: str, email_password: str, last_update: str = None) -> None:
 
     my_email = email_address
 
@@ -291,7 +293,7 @@ def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool, email_addr
         mail_wb.save(fp)
         temp_excel_file = fp.getvalue()
 
-    megafon_send_email(mail_dfs, tag, template_dir, template, to, cc, temp_excel_file, email_address, email_password)
+    megafon_send_email(mail_dfs, tag, template_dir, template, to, cc, temp_excel_file, email_address, email_password, last_update)
 
 
 if __name__ == "__main__":
