@@ -134,7 +134,7 @@ def convert_date(_data_frame, _columns):
     for _column_name in _columns_names:
         for _column in _columns:
             if _column.lower() in _column_name.lower():
-                _data_frame[_column_name] = pd.to_datetime(_data_frame[_column_name], format='mixed', dayfirst=True)  # , format="%d.%m.%Y"
+                _data_frame[_column_name] = pd.to_datetime(_data_frame[_column_name], format='mixed', dayfirst=True, errors='ignore')  # , format="%d.%m.%Y"
             else:
                 pass
     return _data_frame
