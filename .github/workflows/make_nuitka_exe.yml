@@ -32,6 +32,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: gdc_vols.py
+          include-package-data: redmail
           # many more Nuitka options available, see action doc, but it's best
           # to use nuitka-project: options in your code, so e.g. you can make
           # a difference for macOS and create an app bundle there.
