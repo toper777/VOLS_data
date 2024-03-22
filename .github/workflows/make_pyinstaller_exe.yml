@@ -16,5 +16,5 @@ jobs:
 
       - uses: actions/upload-artifact@main
         with:
-          name: weekly_report
+          name: gdc_vols
           path: dist/windows
