@@ -33,7 +33,6 @@ def main():
             logger.error(f'Invalid email password')
             EMAIL_PASSWORD = None
 
-
     # Наименования колонок для преобразования даты
     columns_date = ['Планируемая дата окончания', 'Дата ввода', 'Прогнозная дата окончания', '_дата']
     # Наименования колонок для преобразования числа
@@ -246,7 +245,8 @@ def main():
     date_last_update = get_update_date(last_update_url)
     data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
     if data_update_age > datetime.timedelta(hours=30):
-        if input(f'{Color.RED}Данные на портале обновлялись {data_update_age.days*24 + data_update_age.seconds/3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
+        if input(
+                f'{Color.RED}Данные на портале обновлялись {data_update_age.days * 24 + data_update_age.seconds / 3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
             sys.exit(12)
 
     for sheet, url in urls.items():
@@ -765,7 +765,8 @@ def main():
         curr_status_bool_mask = (~build_dashboard_data[process_columns['commissioning_status']].str.contains('Исполнена|Не требуется', regex=True)) | (
             ~build_dashboard_data[process_columns['ks2_status']].str.contains('Исполнена|Не требуется', regex=True))
     else:
-        curr_status_bool_mask = ((build_dashboard_data[process_columns['complete_date']].isna()) & (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month]))
+        curr_status_bool_mask = (
+                    (build_dashboard_data[process_columns['complete_date']].isna()) & (build_dashboard_data[process_columns['plan_date']] <= last_days_of_month[process_month]))
 
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
@@ -870,7 +871,8 @@ def main():
     #                            excel_cell_names, table_style)
     if not sending_po_dataframe.empty:
         if args.send_email:
-            threading.Thread(target=call_send_email, args=(sending_po_dataframe, reports_data['sending_po'], args.no_debug, EMAIL_ADDRESS, EMAIL_PASSWORD, date_last_update)).start()
+            threading.Thread(target=call_send_email,
+                             args=(sending_po_dataframe, reports_data['sending_po'], args.no_debug, EMAIL_ADDRESS, EMAIL_PASSWORD, date_last_update)).start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["sending_po"]}"{Color.END}')
         wb.excel_format_table(sending_po_dataframe, report_sheets['sending_po'], excel_tables_names[report_sheets['sending_po']])
 
@@ -905,7 +907,8 @@ def main():
     #                            excel_cell_names, table_style)
     if not received_po_dataframe.empty:
         if args.send_email:
-            threading.Thread(target=call_send_email, args=(received_po_dataframe, reports_data['received_po'], args.no_debug, EMAIL_ADDRESS, EMAIL_PASSWORD, date_last_update)).start()
+            threading.Thread(target=call_send_email,
+                             args=(received_po_dataframe, reports_data['received_po'], args.no_debug, EMAIL_ADDRESS, EMAIL_PASSWORD, date_last_update)).start()
         print(f'Создаем лист отчета: {Color.GREEN}"{report_sheets["received_po"]}"{Color.END}')
         wb.excel_format_table(received_po_dataframe, report_sheets['received_po'], excel_tables_names[report_sheets['received_po']])
 
