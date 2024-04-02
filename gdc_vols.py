@@ -1,9 +1,12 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
 import argparse
+import base64
 import locale
+import os
 import threading
 
 import openpyxl.styles.borders as borders_style
+from dotenv import load_dotenv
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Font, Side, PatternFill, Alignment, Border
 
@@ -11,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.18"
+PROGRAM_VERSION: str = "0.6.19"
 
 
 def main():
@@ -299,7 +302,7 @@ def main():
         ws = wb[report_sheets['report']]
     except KeyError:
         logger.info(f"Лист \"{report_sheets['report']}\" не существует. Создаем... ")
-        ws = wb.create_sheet(title=report_sheets['report'])
+        ws = wb.create_sheet(title=report_sheets['report'], index=0)
 
     # Формирование статических полей отчёта
     if date_last_update is not None:
@@ -439,13 +442,13 @@ def main():
         ws['H9'].alignment = align_center
         ws['H9'].border = border_medium
 
-    # Поля для целевых мероприятий по BaseCase
-    ws['A41'] = "Целевые мероприятия \"BaseCase\" ВОЛС"
+    # Поля для целевых мероприятий по Base Case
+    ws['A41'] = "Целевые мероприятия Base Case ВОЛС"
     ws['A41'].font = fn_red_bold
     ws['A41'].border = border_thin
     ws['A42'] = 'Всего мероприятий'
     ws['A42'].border = border_medium
-    ws['A44'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
+    ws['A44'] = 'Исполнение KPI Base Case (накопительный итог)'
     ws['A44'].font = fn_red_bold
     ws['A44'].border = border_thin
     ws['A46'] = 'Учтенных ВОЛС в KPI'

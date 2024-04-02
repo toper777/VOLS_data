@@ -1,17 +1,14 @@
 #  Copyright (c) 2022. Tikhon Ostapenko
-import base64
 import configparser
 import datetime
 import json
-import os
 import sys
 import urllib.request
 from io import BytesIO
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import List
 
 import pandas as pd
-from dotenv import load_dotenv
 from loguru import logger
 from openpyxl.utils import get_column_letter
 from pandas import DataFrame
@@ -19,9 +16,7 @@ from redmail import EmailSender
 
 from Colors import Colors as Color
 from FormattedWorkbook import FormattedWorkbook
-
 from gdc_vols import PROGRAM_NAME, PROGRAM_VERSION
-
 
 config_file = 'gdc_vols.ini'
 
@@ -138,24 +133,22 @@ def convert_date(_data_frame, _columns):
             else:
                 pass
     return _data_frame
+    # for column in _columns:
+    #     _data_frame[column] = pd.to_datetime(_data_frame[column], format='mixed', dayfirst=True, errors='ignore')  # , format="%d.%m.%Y"
+    # return _data_frame
 
 
 def convert_int(_data_frame, _columns):
     """
-    Конвертирует поля с целыми в формат int32.
+    Конвертирует поля с целыми в числовой формат.
     Возвращает конвертированный DataFrame
 
     :param _data_frame:
     :param _columns:
     :return DataFrame:
     """
-    _columns_names = list(_data_frame)
-    for _column_name in _columns_names:
-        for _column in _columns:
-            if _column.lower() in _column_name.lower():
-                _data_frame = _data_frame.astype({_column_name: 'int32'})
-            else:
-                pass
+    for column in _columns:
+        _data_frame[column] = pd.to_numeric(_data_frame[column], errors='ignore')
     return _data_frame
 
 
@@ -215,7 +208,8 @@ def adjust_columns_width(_dataframe):
     return _dataframe
 
 
-def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes, email_address: str, email_password: str, data_date: str):
+def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes,
+                       email_address: str, email_password: str, data_date: str):
     """
     @param data_frame:  Таблица DataFrame с данными
     @param tag:  Заголовок для формирования темы письма
@@ -253,7 +247,6 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
 
 
 def call_send_email(dfs: DataFrame, email_list: list, no_debug: bool, email_address: str, email_password: str, last_update: str = None) -> None:
-
     my_email = email_address
 
     config = configparser.ConfigParser()
