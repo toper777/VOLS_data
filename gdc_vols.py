@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.19"
+PROGRAM_VERSION: str = "0.6.20"
 
 
 def main():
@@ -133,7 +133,7 @@ def main():
         f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
         f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
-        # f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
     }
 
     last_update_url = "https://gdc-rts/api/dashboard/upd/fn_2023_FOCL_Plan_Build_City()"
@@ -213,6 +213,7 @@ def main():
         'pir_smr_status2': 'Подписание договора (дс/заказа) на ПИР/ПИР+СМР_Статус',
         'line_scheme_status': 'Линейная схема_статус',
         'line_scheme_status2': 'Линейная схема_Статус',
+        'line_scheme_status3': 'Линейная схема (АВТ)_статус',
         'tu_status': 'Получение ТУ_статус',
         'tu_status2': 'Получение ТУ_Статус',
         'build_status': 'Строительство трассы_статус',
@@ -254,8 +255,16 @@ def main():
 
     for sheet, url in urls.items():
         data_frame = read_from_dashboard(url)  # Читаем данные из сети
-        data_frame = data_frame[
-            data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
+        if process_columns['branch'] in data_frame.columns:
+            data_frame = data_frame[data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
+        else:
+            print(f'{Color.RED}Не корректный формат входящих данных. Проверьте корректность данных для {sheet}!{Color.END}')
+            sys.exit(2)
+
+        # Переименовываем столбцы в таблицах
+        if process_columns['line_scheme_status3'] in data_frame.columns:
+            data_frame.rename(columns={process_columns['line_scheme_status3']: process_columns['line_scheme_status']}, inplace=True)
+
         data_frame = data_frame.reset_index(drop=True)
         data_frame = convert_date(data_frame, columns_date)  # Переводим дату в формат datetime
         data_frame = convert_int(data_frame, columns_digit)  # Переводим ESUP_ID в числовой формат
