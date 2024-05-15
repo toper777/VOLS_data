@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.20"
+PROGRAM_VERSION: str = "0.6.21"
 
 
 def main():
@@ -136,6 +136,14 @@ def main():
         f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
     }
 
+    urls = {
+        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_City&database=dashboard',
+        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year + 1}_FOCL_Common_Build_City&database=dashboard',
+        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_City&database=dashboard',
+        f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_Zone&database=dashboard',
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_Zone&database=dashboard',
+    }
+
     last_update_url = "https://gdc-rts/api/dashboard/upd/fn_2023_FOCL_Plan_Build_City()"
 
     data_sheets = {
@@ -246,7 +254,8 @@ def main():
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
-    date_last_update = get_update_date(last_update_url)
+    date_last_update = datetime.datetime.now().isoformat()
+    # date_last_update = get_update_date(last_update_url)
     data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
     if data_update_age > datetime.timedelta(hours=30):
         if input(

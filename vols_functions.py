@@ -74,7 +74,8 @@ def read_from_dashboard(_url):
     """
     print(f'Получаем данные из: "{_url}"')
     try:
-        _dashboard_data = pd.read_json(_url, convert_dates=['дата', 'Дата'])
+        # _dashboard_data = pd.read_json(_url, convert_dates=['дата', 'Дата'])
+        _dashboard_data = pd.read_excel(_url, parse_dates=True)
     except Exception as e:
         print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(1)
