@@ -254,6 +254,8 @@ def main():
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
+
+    # Получаем дату обновления данных на портале
     # date_last_update = datetime.datetime.now().isoformat()
     date_last_update = get_update_date(last_update_url)
     data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
@@ -262,8 +264,11 @@ def main():
                 f'{Color.RED}Данные на портале обновлялись {data_update_age.days * 24 + data_update_age.seconds / 3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
             sys.exit(12)
 
-    for sheet, url in api_urls.items():
-        data_frame = read_from_dashboard(url)  # Читаем данные из сети
+    # Получаем данные с портала
+    urls = api_urls # Скачиваем по API JSON
+    # urls = excel_urls # Скачиваем EXCEL файлы
+    for sheet, url in urls.items():
+        data_frame = read_from_dashboard(url, data_type="JSON")  # Читаем данные из сети. Для API запросов data_type должен быть "JSON", для скачиваемых файлов "EXCEL"
         if process_columns['branch'] in data_frame.columns:
             data_frame = data_frame[data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
         else:

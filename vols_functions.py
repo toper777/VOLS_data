@@ -65,17 +65,20 @@ def print_debug(level, message):
     print(f'{Color.RED}DEBUG ({level}): \n{Color.END}{Color.YELLOW}{message}{Color.END}')
 
 
-def read_from_dashboard(_url):
+def read_from_dashboard(_url, data_type="JSON"):
     """
     Читает данные JSON из url и сохраняет их в DataFrame
 
     :param _url:
+    :param type:
     :return DataFrame:
     """
     print(f'Получаем данные из: "{_url}"')
     try:
-        _dashboard_data = pd.read_json(_url, convert_dates=['дата', 'Дата'])
-        # _dashboard_data = pd.read_excel(_url, parse_dates=True)
+        if data_type.lower() == "excel":
+            _dashboard_data = pd.read_excel(_url, parse_dates=True)
+        else:
+            _dashboard_data = pd.read_json(_url, convert_dates=['дата', 'Дата'])
     except Exception as e:
         print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(1)
