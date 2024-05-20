@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.21"
+PROGRAM_VERSION: str = "0.6.22"
 
 
 def main():
@@ -127,16 +127,16 @@ def main():
             logger.error(f'Директория для файла отчета {Path(args.report_file).parent} не существует')
             sys.exit(100)
 
-    urls = {
-        # f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
-        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City',
-        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
-        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
-        f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts/api/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
+    api_urls = {
+        # f'Расш. стр. гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
+        f'Расш. стр. гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City',
+        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
+        f'Реконструкция гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
+        f'Строительство зон.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
     }
 
-    urls = {
+    excel_urls = {
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_City&database=dashboard',
         f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year + 1}_FOCL_Common_Build_City&database=dashboard',
         f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_City&database=dashboard',
@@ -144,7 +144,7 @@ def main():
         f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_Zone&database=dashboard',
     }
 
-    last_update_url = "https://gdc-rts/api/dashboard/upd/fn_2023_FOCL_Plan_Build_City()"
+    last_update_url = f"https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/upd/fn_{process_year}_FOCL_Plan_Build_City()"
 
     data_sheets = {
         'city_main_build': f'Осн. стр. гор.ВОЛС {process_year}',
@@ -254,15 +254,15 @@ def main():
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
-    date_last_update = datetime.datetime.now().isoformat()
-    # date_last_update = get_update_date(last_update_url)
+    # date_last_update = datetime.datetime.now().isoformat()
+    date_last_update = get_update_date(last_update_url)
     data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
     if data_update_age > datetime.timedelta(hours=30):
         if input(
                 f'{Color.RED}Данные на портале обновлялись {data_update_age.days * 24 + data_update_age.seconds / 3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
             sys.exit(12)
 
-    for sheet, url in urls.items():
+    for sheet, url in api_urls.items():
         data_frame = read_from_dashboard(url)  # Читаем данные из сети
         if process_columns['branch'] in data_frame.columns:
             data_frame = data_frame[data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
