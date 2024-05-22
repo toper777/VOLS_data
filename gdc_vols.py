@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.22"
+PROGRAM_VERSION: str = "0.6.23"
 
 
 def main():
@@ -71,6 +71,7 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description=f'{PROGRAM_NAME} v.{PROGRAM_VERSION}')
     parser.add_argument("-v", "--verbose", type=int, help="Уровень отладки: 0 - CRITICAL, 1 - ERROR, 2 - INFO, 3 - DEBUG")
+    parser.add_argument("-s", "--source-type", help="Тип источника данных (API или EXCEL)", default="API")
     parser.add_argument("-y", "--year", type=int, help="year for processing")
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
@@ -265,8 +266,11 @@ def main():
             sys.exit(12)
 
     # Получаем данные с портала
-    urls = api_urls # Скачиваем по API JSON
-    # urls = excel_urls # Скачиваем EXCEL файлы
+    if args.source_type.lower() == "excel":
+        urls = excel_urls  # Скачиваем EXCEL файлы
+    else:
+        urls = api_urls # Скачиваем по API JSON
+
     for sheet, url in urls.items():
         data_frame = read_from_dashboard(url, data_type="JSON")  # Читаем данные из сети. Для API запросов data_type должен быть "JSON", для скачиваемых файлов "EXCEL"
         if process_columns['branch'] in data_frame.columns:
