@@ -71,7 +71,7 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description=f'{PROGRAM_NAME} v.{PROGRAM_VERSION}')
     parser.add_argument("-v", "--verbose", type=int, help="Уровень отладки: 0 - CRITICAL, 1 - ERROR, 2 - INFO, 3 - DEBUG")
-    parser.add_argument("-s", "--source-type", help="Тип источника данных (API или EXCEL)", default="JSON")
+    parser.add_argument("-s", "--source-type", help="Тип источника данных (JSON или EXCEL)", default="JSON")
     parser.add_argument("-y", "--year", type=int, help="year for processing")
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
