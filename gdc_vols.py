@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.23"
+PROGRAM_VERSION: str = "0.6.24"
 
 
 def main():
@@ -81,6 +81,7 @@ def main():
     parser.add_argument("--new-algorithm", action='store_true', help="Использовать алгоритм подсчета по принятию в эксплуатацию, вместо факта КС-2 и вводу в эксплуатацию")
     parser.add_argument("--active-year", action='store_true', help="Формировать список активных мероприятий до конца года")
     parser.add_argument("--soc-report", action='store_true', help="Добавить в отчет страницы Соц. соревнования")
+    parser.add_argument("--ignore-cert", action='store_true', help="Игнорировать проверку SSL сертификатов при получении данных")
     args = parser.parse_args()
 
     # Добавление суффикса к имени сохраняемого файла при задании режимов работы
@@ -127,6 +128,11 @@ def main():
         else:
             logger.error(f'Директория для файла отчета {Path(args.report_file).parent} не существует')
             sys.exit(100)
+
+    if args.ignore_cert:
+        check_cert = False
+    else:
+        check_cert = True
 
     api_urls = {
         # f'Расш. стр. гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
@@ -258,7 +264,7 @@ def main():
 
     # Получаем дату обновления данных на портале
     # date_last_update = datetime.datetime.now().isoformat()
-    date_last_update = get_update_date(last_update_url)
+    date_last_update = get_update_date(last_update_url, check_ssl=check_cert)
     data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
     if data_update_age > datetime.timedelta(hours=30):
         if input(
@@ -274,7 +280,7 @@ def main():
         input_data_type = "JSON"
 
     for sheet, url in urls.items():
-        data_frame = read_from_dashboard(url, data_type=input_data_type)  # Читаем данные из сети. Для API запросов data_type должен быть "JSON", для скачиваемых файлов "EXCEL"
+        data_frame = read_from_dashboard(url, data_type=input_data_type, check_ssl=check_cert)  # Читаем данные из сети. Для API запросов data_type должен быть "JSON", для скачиваемых файлов "EXCEL"
         if process_columns['branch'] in data_frame.columns:
             data_frame = data_frame[data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
         else:

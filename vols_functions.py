@@ -2,6 +2,7 @@
 import configparser
 import datetime
 import json
+import ssl
 import sys
 import urllib.request
 from io import BytesIO
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
+import requests
 from loguru import logger
 from openpyxl.utils import get_column_letter
 from pandas import DataFrame
@@ -65,33 +67,48 @@ def print_debug(level, message):
     print(f'{Color.RED}DEBUG ({level}): \n{Color.END}{Color.YELLOW}{message}{Color.END}')
 
 
-def read_from_dashboard(_url, data_type="JSON"):
+def read_from_dashboard(_url: str, data_type: str = "JSON", check_ssl: bool = True) -> pd.DataFrame:
     """
-    Читает данные JSON из url и сохраняет их в DataFrame
+    Читает данные JSON или Excel из url и сохраняет их в DataFrame
 
-    :param _url:
-    :param type:
+    :param _url: Местоположения данных:
+    :param data_type: Тип получаемых данных 'JSON' млм 'EXCEL':
+    :param check_ssl: Проверка сертификата (True или False):
     :return DataFrame:
     """
     print(f'Получаем данные из: "{_url}"')
     try:
+        # Временно выключаем проверку сертификатов
+        # ssl._create_default_https_context = ssl._create_unverified_context
+        # Временно выключаем проверку сертификатов
+
         if data_type.lower() == "excel":
             _dashboard_data = pd.read_excel(_url, parse_dates=True)
         else:
-            _dashboard_data = pd.read_json(_url, convert_dates=['дата', 'Дата'])
+            # Временно выключаем проверку сертификатов
+            response = requests.get(_url, verify=check_ssl)
+            _dashboard_data = pd.DataFrame(response.json())
+            # Временно выключаем проверку сертификатов
+
+            # _dashboard_data = pd.read_json(_url, convert_dates=['дата', 'Дата'])
     except Exception as e:
         print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(1)
     return _dashboard_data
 
 
-def get_update_date(_url):
+def get_update_date(_url, check_ssl=True):
     """Читает дату обновления через API из url и возвращает ее."""
 
     print(f'Получаем дату обновления данных из: "{_url}"')
     try:
-        response = urllib.request.urlopen(_url)
-        data_json = json.load(response)
+        # Временно выключаем проверку сертификатов
+        response = requests.get(_url, verify=check_ssl)
+        data_json = json.loads(response.content.decode('utf-8'))
+        # Временно выключаем проверку сертификатов
+
+        # response = urllib.request.urlopen(_url)
+        # data_json = json.load(response)
     except Exception as e:
         print(f"ERROR: can't read data from url {_url}. {e}")
         sys.exit(3)
