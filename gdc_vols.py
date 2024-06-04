@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.24"
+PROGRAM_VERSION: str = "0.6.25"
 
 
 def main():
@@ -261,6 +261,10 @@ def main():
     ws_first = wb.active
 
     # Получение исходных данных и запись форматированных данных
+
+    # Временно выключаем проверку сертификатов
+    ssl._create_default_https_context = ssl._create_unverified_context
+    # Временно выключаем проверку сертификатов
 
     # Получаем дату обновления данных на портале
     # date_last_update = datetime.datetime.now().isoformat()
