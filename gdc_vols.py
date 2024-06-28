@@ -32,7 +32,7 @@ def main():
     if EMAIL_PASSWORD is not None:
         try:
             EMAIL_PASSWORD = base64.b64decode(base64.b85decode(EMAIL_PASSWORD.encode('UTF-8'))).decode('UTF-8')
-        except ValueError as er:
+        except ValueError:
             logger.error(f'Invalid email password')
             EMAIL_PASSWORD = None
 
