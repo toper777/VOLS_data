@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.25"
+PROGRAM_VERSION: str = "0.6.26"
 
 
 def main():
@@ -267,13 +267,15 @@ def main():
     # Временно выключаем проверку сертификатов
 
     # Получаем дату обновления данных на портале
+    date_last_update = None
     # date_last_update = datetime.datetime.now().isoformat()
     date_last_update = get_update_date(last_update_url, check_ssl=check_cert)
-    data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
-    if data_update_age > datetime.timedelta(hours=30):
-        if input(
-                f'{Color.RED}Данные на портале обновлялись {data_update_age.days * 24 + data_update_age.seconds / 3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
-            sys.exit(12)
+    if date_last_update is not None:
+        data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
+        if data_update_age > datetime.timedelta(hours=30):
+            if input(
+                    f'{Color.RED}Данные на портале обновлялись {data_update_age.days * 24 + data_update_age.seconds / 3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
+                sys.exit(12)
 
     # Получаем данные с портала
     if args.source_type.lower() == "excel":

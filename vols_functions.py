@@ -105,7 +105,8 @@ def get_update_date(url: str, check_ssl: bool = True):
         # data_json = json.load(response)
     except Exception as e:
         print(f"ERROR: can't read data from url {url}. {e}")
-        sys.exit(3)
+        return None
+        # sys.exit(3)
     print(f'Дата обновления данных на портале: {Color.DARKCYAN}{datetime.datetime.fromisoformat(data_json[0]["DATE_LAST_UPDATE"]).strftime("%d.%m.%Y %H:%M:%S")}{Color.END}')
     return data_json[0]['DATE_LAST_UPDATE']
 
@@ -224,7 +225,7 @@ def adjust_columns_width(_dataframe):
 
 
 def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str, template_name: str, to_address: List[str], cc_address: List[str], attachment_file: bytes,
-                       email_address: str, email_password: str, data_date: str):
+                       email_address: str, email_password: str, data_date: [str, None]):
     """
     @param data_frame:  Таблица DataFrame с данными
     @param tag:  Заголовок для формирования темы письма
@@ -252,7 +253,7 @@ def megafon_send_email(data_frame: DataFrame, tag: str, template_directory: str,
             'title': tag,
             'prog': PROGRAM_NAME,
             'ver': PROGRAM_VERSION,
-            'data_date': datetime.datetime.fromisoformat(data_date).strftime("%d.%m.%Y %H:%M:%S"),
+            'data_date': datetime.datetime.fromisoformat(data_date).strftime("%d.%m.%Y %H:%M:%S") if data_date is not None else "Нет данных",
         },
         body_tables={"table": data_frame},
         attachments={
