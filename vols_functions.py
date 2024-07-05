@@ -164,7 +164,7 @@ def convert_int(_data_frame, _columns):
     :return DataFrame:
     """
     for column in _columns:
-        _data_frame[column] = pd.to_numeric(_data_frame[column], errors='ignore')
+        _data_frame[column] = pd.to_numeric(_data_frame[column], errors='ignore', downcast="integer")
     return _data_frame
 
 
