@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.26"
+PROGRAM_VERSION: str = "0.6.27"
 
 
 def main():
@@ -82,6 +82,7 @@ def main():
     parser.add_argument("--active-year", action='store_true', help="Формировать список активных мероприятий до конца года")
     parser.add_argument("--soc-report", action='store_true', help="Добавить в отчет страницы Соц. соревнования")
     parser.add_argument("--ignore-cert", action='store_true', help="Игнорировать проверку SSL сертификатов при получении данных")
+    parser.add_argument("--no-update-date", action='store_true', help="Не запрашивать дату обновления с портала")
     args = parser.parse_args()
 
     # Добавление суффикса к имени сохраняемого файла при задании режимов работы
@@ -269,13 +270,14 @@ def main():
     # Получаем дату обновления данных на портале
     date_last_update = None
     # date_last_update = datetime.datetime.now().isoformat()
-    date_last_update = get_update_date(last_update_url, check_ssl=check_cert)
-    if date_last_update is not None:
-        data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
-        if data_update_age > datetime.timedelta(hours=30):
-            if input(
-                    f'{Color.RED}Данные на портале обновлялись {data_update_age.days * 24 + data_update_age.seconds / 3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
-                sys.exit(12)
+    if not args.no_update_date:
+        date_last_update = get_update_date(last_update_url, check_ssl=check_cert)
+        if date_last_update is not None:
+            data_update_age = (datetime.datetime.now() - datetime.datetime.fromisoformat(date_last_update))
+            if data_update_age > datetime.timedelta(hours=48):
+                if input(
+                        f'{Color.RED}Данные на портале обновлялись {data_update_age.days * 24 + data_update_age.seconds / 3600:.2f} час. назад! Хотите продолжить обработку данных (y/N)?{Color.END}').lower() != 'y':
+                    sys.exit(12)
 
     # Получаем данные с портала
     if args.source_type.lower() == "excel":
