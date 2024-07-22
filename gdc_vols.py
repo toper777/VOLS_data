@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.28"
+PROGRAM_VERSION: str = "0.6.29"
 
 
 def main():
@@ -54,6 +54,7 @@ def main():
     # Excel styles
     fn_bold = Font(bold=True)
     fn_red_bold = Font(color="FF0000", bold=True)
+    fn_blue_bold = Font(color="0000FF", bold=True)
     fn_red = Font(color="B22222")
     fn_green = Font(color="006400")
     fn_green_bold = Font(color="006400", bold=True)
@@ -354,17 +355,17 @@ def main():
         ws['L1'].font = fn_green_bold
         ws['L1'].alignment = align_center
     ws['A1'] = "Основное строительство ВОЛС"
-    ws['A1'].font = fn_red_bold
+    ws['A1'].font = fn_blue_bold
     ws['A1'].border = border_thin
     ws['A2'] = 'Всего мероприятий'
     ws['A2'].border = border_medium
     ws['A4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
-    ws['A4'].font = fn_red_bold
+    ws['A4'].font = fn_blue_bold
     ws['A4'].border = border_thin
     ws['A6'] = 'Учтенных ВОЛС в KPI'
     ws['A6'].border = border_medium
     ws['A8'] = 'Исполнение мероприятий в ЕСУП'
-    ws['A8'].font = fn_red_bold
+    ws['A8'].font = fn_blue_bold
     ws['A8'].border = border_thin
     ws['A9'] = 'Наименование мероприятия'
     ws['A9'].font = fn_bold
@@ -398,17 +399,17 @@ def main():
 
     if ext_build_df is not None:
         ws['A21'] = "Дополнительное строительство ВОЛС"
-        ws['A21'].font = fn_red_bold
+        ws['A21'].font = fn_blue_bold
         ws['A21'].border = border_thin
         ws['A22'] = 'Всего мероприятий'
         ws['A22'].border = border_medium
         ws['A24'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
-        ws['A24'].font = fn_red_bold
+        ws['A24'].font = fn_blue_bold
         ws['A24'].border = border_thin
         ws['A26'] = 'Учтенных ВОЛС в KPI'
         ws['A26'].border = border_medium
         ws['A28'] = 'Исполнение мероприятий в ЕСУП'
-        ws['A28'].font = fn_red_bold
+        ws['A28'].font = fn_blue_bold
         ws['A28'].border = border_thin
         ws['A29'] = 'Наименование мероприятия'
         ws['A29'].font = fn_bold
@@ -442,18 +443,18 @@ def main():
 
     if rec_df_ is not None:
         ws['F1'] = "Реконструкция ВОЛС"
-        ws['F1'].font = fn_red_bold
+        ws['F1'].font = fn_blue_bold
         ws['F1'].border = border_thin
         ws['F2'] = 'Всего мероприятий'
         ws['F2'].border = border_medium
         ws['F2'].border = border_medium
         ws['F4'] = 'Исполнение KPI ВОЛС КФ (накопительный итог)'
-        ws['F4'].font = fn_red_bold
+        ws['F4'].font = fn_blue_bold
         ws['F4'].border = border_thin
         ws['F6'] = 'Учтенных ВОЛС в KPI'
         ws['F6'].border = border_medium
         ws['F8'] = 'Исполнение мероприятий в ЕСУП'
-        ws['F8'].font = fn_red_bold
+        ws['F8'].font = fn_blue_bold
         ws['F8'].border = border_thin
         ws['F9'] = 'Наименование мероприятия'
         ws['F9'].font = fn_bold
@@ -487,17 +488,17 @@ def main():
 
     # Поля для целевых мероприятий по Base Case
     ws['A41'] = "Целевые мероприятия Base Case ВОЛС"
-    ws['A41'].font = fn_red_bold
+    ws['A41'].font = fn_blue_bold
     ws['A41'].border = border_thin
     ws['A42'] = 'Всего мероприятий'
     ws['A42'].border = border_medium
     ws['A44'] = 'Исполнение KPI Base Case (накопительный итог)'
-    ws['A44'].font = fn_red_bold
+    ws['A44'].font = fn_blue_bold
     ws['A44'].border = border_thin
     ws['A46'] = 'Учтенных ВОЛС в KPI'
     ws['A46'].border = border_medium
     ws['A48'] = 'Исполнение мероприятий в ЕСУП'
-    ws['A48'].font = fn_red_bold
+    ws['A48'].font = fn_blue_bold
     ws['A48'].border = border_thin
     ws['A49'] = 'Наименование мероприятия'
     ws['A49'].font = fn_bold
