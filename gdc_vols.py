@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.30"
+PROGRAM_VERSION: str = "0.6.31"
 
 
 def main():
@@ -146,11 +146,11 @@ def main():
     }
 
     excel_urls = {
-        f'Расш. стр. гор.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_City&database=dashboard',
-        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year + 1}_FOCL_Common_Build_City&database=dashboard',
-        f'Реконструкция гор.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_City&database=dashboard',
-        f'Строительство зон.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_Zone&database=dashboard',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://gdc-rts.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_Zone&database=dashboard',
+        f'Расш. стр. гор.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_City&database=dashboard',
+        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year + 1}_FOCL_Common_Build_City&database=dashboard',
+        f'Реконструкция гор.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_City&database=dashboard',
+        f'Строительство зон.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_Zone&database=dashboard',
+        f'Реконструкция зон.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_Zone&database=dashboard',
     }
 
     last_update_url = f"https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/upd/fn_{process_year}_FOCL_Plan_Build_City()"
