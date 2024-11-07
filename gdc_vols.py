@@ -14,7 +14,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.31"
+PROGRAM_VERSION: str = "0.6.32"
 
 
 def main():
@@ -247,6 +247,7 @@ def main():
         'name': 'Название',
         'program': 'Программы',
         'prognoz_date': 'Прогнозная дата окончания',
+        'po': 'Подрядчик по Строительству / Продаже ВОЛС',
     }
 
     rename_columns = {
@@ -822,6 +823,7 @@ def main():
                                                                    process_columns['name'],
                                                                    process_columns['plan_date'],
                                                                    process_columns['program'],
+                                                                   process_columns['po'],
                                                                    ]]
     current_month_build_dataframe[BP] = BP_BUILD
 
@@ -845,6 +847,7 @@ def main():
                                                                                          process_columns['name'],
                                                                                          process_columns['plan_date'],
                                                                                          process_columns['program'],
+                                                                                         process_columns['po'],
                                                                                          ]]
         current_month_reconstruction_dataframe[BP] = BP_RECON  # Добавляем столбец с названием бизнес-процесса
 
@@ -898,6 +901,7 @@ def main():
                                                              process_columns['name'],
                                                              process_columns['plan_date'],
                                                              process_columns['program'],
+                                                             process_columns['po'],
                                                              ]]
     sending_po_build_dataframe[BP] = BP_BUILD
     if rec_df_ is not None:
@@ -906,6 +910,7 @@ def main():
                                                process_columns['name'],
                                                process_columns['plan_date'],
                                                process_columns['program'],
+                                               process_columns['po'],
                                                ]]
         sending_po_rec_df[BP] = BP_RECON
         # Объединяем передачу ТЗ в ПО стройки и реконструкции
@@ -932,6 +937,7 @@ def main():
                                                                process_columns['name'],
                                                                process_columns['plan_date'],
                                                                process_columns['program'],
+                                                               process_columns['po'],
                                                                ]]
     received_po_build_dataframe[BP] = BP_BUILD
 
@@ -941,6 +947,7 @@ def main():
                                                  process_columns['name'],
                                                  process_columns['plan_date'],
                                                  process_columns['program'],
+                                                 process_columns['po'],
                                                  ]]
         received_po_rec_df[BP] = BP_RECON
         # Объединяем не принято в ПО стройки и реконструкции
