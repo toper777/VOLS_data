@@ -3,6 +3,7 @@ import argparse
 import base64
 import locale
 import os
+import ssl
 import threading
 
 import openpyxl.styles.borders as borders_style
@@ -14,7 +15,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.6.32"
+PROGRAM_VERSION: str = "0.7.1"
 
 
 def main():
@@ -72,7 +73,7 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description=f'{PROGRAM_NAME} v.{PROGRAM_VERSION}')
     parser.add_argument("-v", "--verbose", type=int, help="Уровень отладки: 0 - CRITICAL, 1 - ERROR, 2 - INFO, 3 - DEBUG")
-    parser.add_argument("-s", "--source-type", help="Тип источника данных (JSON или EXCEL)", default="JSON")
+    parser.add_argument("-s", "--source-type", help="Тип источника данных (JSON, EXCEL или FILE)", default="JSON")
     parser.add_argument("-y", "--year", type=int, help="year for processing")
     parser.add_argument("-m", "--month", type=int, help="month for processing")
     parser.add_argument("-r", "--report-file", help="report file name, must have .xlsx extension")
@@ -139,18 +140,25 @@ def main():
     api_urls = {
         # f'Расш. стр. гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City_211_dev',
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Build_City',
-        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
-        f'Реконструкция гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
+        # f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year + 1}_FOCL_Common_Build_City',
+        # f'Реконструкция гор.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_City',
         f'Строительство зон.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Build_Zone',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
+        # f'Реконструкция зон.ВОЛС {process_year}': f'https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/plan/vw_{process_year}_FOCL_Common_Rebuild_Zone',
     }
 
     excel_urls = {
         f'Расш. стр. гор.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_City&database=dashboard',
-        f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year + 1}_FOCL_Common_Build_City&database=dashboard',
-        f'Реконструкция гор.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_City&database=dashboard',
+        # f'Cтр. гор.ВОЛС (РАП) {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year + 1}_FOCL_Common_Build_City&database=dashboard',
+        # f'Реконструкция гор.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_City&database=dashboard',
         f'Строительство зон.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Build_Zone&database=dashboard',
-        f'Реконструкция зон.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_Zone&database=dashboard',
+        # f'Реконструкция зон.ВОЛС {process_year}': f'https://old.gdc-tr-tools.megafon.ru/api/legacy/download?table=vw_{process_year}_FOCL_Common_Rebuild_Zone&database=dashboard',
+    }
+
+    file_urls = {
+        f'Расш. стр. гор.ВОЛС {process_year}': Path('//megafon.ru/KVK/KRN/Files/TelegrafFiles/ОПРС/!Проекты РЦРП/Блок №3/ВОЛС', str(process_year), 'from dashboard', f'build_{process_year}.xlsx'),
+        f'Cтр. гор.ВОЛС (РАП) {process_year}': Path('//megafon.ru/KVK/KRN/Files/TelegrafFiles/ОПРС/!Проекты РЦРП/Блок №3/ВОЛС', str(process_year), 'from dashboard', f'rap_{process_year}.xlsx'),
+        f'Реконструкция гор.ВОЛС {process_year}': Path('//megafon.ru/KVK/KRN/Files/TelegrafFiles/ОПРС/!Проекты РЦРП/Блок №3/ВОЛС', str(process_year), 'from dashboard', f'rec_{process_year}.xlsx'),
+
     }
 
     last_update_url = f"https://vlg-adi-web01.megafon.ru/legacy-dash/dashboard/upd/fn_{process_year}_FOCL_Plan_Build_City()"
@@ -257,6 +265,22 @@ def main():
         process_columns['plan_date']: 'План',
         process_columns['complete_date']: 'Факт',
     }
+    file_rename_columns_build = {
+        'Регион': process_columns['region'],
+        'Подготовка ТЗ_статус': process_columns['tz_status'],
+    }
+    file_rename_columns_rec = {
+        'Регион': process_columns['region'],
+        'Подготовка ТЗ_статус': process_columns['tz_status2'],
+        'Передача ТЗ подрядчику_статус': process_columns['send_tz_status2'],
+        'Дата ввода в эксплуатацию': process_columns['complete_date2'],
+        'Заказ ПИР,СМР_статус': process_columns['pir_smr_status2'],
+        'Линейная схема_статус': process_columns['line_scheme_status2'],
+        'Получение ТУ_статус': process_columns['tu_status2'],
+        'Строительство трассы_статус': process_columns['build_status2'],
+        'КС-2 (ПИР, СМР)_статус': process_columns['ks2_status2'],
+        'Приемка в эксплуатацию_статус': process_columns['commissioning_status2'],
+    }
 
     print(f'{Color.DARKCYAN}{datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}:{Color.END} {PROGRAM_NAME}: {PROGRAM_VERSION}')
 
@@ -285,12 +309,15 @@ def main():
     if args.source_type.lower() == "excel":
         urls = excel_urls  # Скачиваем EXCEL файлы
         input_data_type = "EXCEL"
+    elif args.source_type.lower() == "file":
+            urls = file_urls  # Скачиваем EXCEL файлы
+            input_data_type = "FILE"
     else:
         urls = api_urls  # Скачиваем по API JSON
         input_data_type = "JSON"
 
     for sheet, url in urls.items():
-        data_frame = read_from_dashboard(url, data_type=input_data_type, check_ssl=check_cert)  # Читаем данные из сети. Для API запросов data_type должен быть "JSON", для скачиваемых файлов "EXCEL"
+        data_frame = read_from_dashboard(url, data_type=input_data_type, check_ssl=check_cert)  # Читаем данные из сети. Для API запросов data_type должен быть "JSON", для скачиваемых файлов "EXCEL", для локальных файлов "FILE"
         if process_columns['branch'] in data_frame.columns:
             data_frame = data_frame[data_frame[process_columns['branch']] == work_branch]  # Оставляем только отчётный филиал
         else:
@@ -300,6 +327,12 @@ def main():
         # Переименовываем столбцы в таблицах
         if process_columns['line_scheme_status3'] in data_frame.columns:
             data_frame.rename(columns={process_columns['line_scheme_status3']: process_columns['line_scheme_status']}, inplace=True)
+
+        if input_data_type == "FILE":
+            if sheet == f'Расш. стр. гор.ВОЛС {process_year}' or sheet == f'Cтр. гор.ВОЛС (РАП) {process_year}':
+                data_frame.rename(columns=file_rename_columns_build, inplace=True)
+            elif sheet == f'Реконструкция гор.ВОЛС {process_year}':
+                data_frame.rename(columns=file_rename_columns_rec, inplace=True)
 
         data_frame = data_frame.reset_index(drop=True)
         data_frame = convert_date(data_frame, columns_date)  # Переводим дату в формат datetime

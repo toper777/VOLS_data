@@ -2,15 +2,14 @@
 import configparser
 import datetime
 import json
-import ssl
 import string
 import sys
-import urllib.request
 from io import BytesIO
 from itertools import product
 from pathlib import Path
 from typing import List
 
+import numpy as np
 import pandas as pd
 import requests
 from loguru import logger
@@ -18,6 +17,7 @@ from openpyxl.utils import get_column_letter
 from pandas import DataFrame
 from redmail import EmailSender
 from urllib3.exceptions import InsecureRequestWarning
+import warnings
 
 from Colors import Colors as Color
 from FormattedWorkbook import FormattedWorkbook
@@ -68,7 +68,7 @@ def read_from_dashboard(url: str, data_type: str = "JSON", check_ssl: bool = Tru
     Читает данные JSON или Excel из url и сохраняет их в DataFrame
 
     :param url: Местоположения данных:
-    :param data_type: Тип получаемых данных 'JSON' млм 'EXCEL':
+    :param data_type: Тип получаемых данных 'JSON', 'EXCEL' или 'FILE':
     :param check_ssl: Проверка сертификата (True или False):
     :return DataFrame:
     """
@@ -76,6 +76,9 @@ def read_from_dashboard(url: str, data_type: str = "JSON", check_ssl: bool = Tru
     try:
         if data_type.lower() == "excel":
             _dashboard_data = pd.read_excel(url, parse_dates=True)
+        elif data_type.lower() == "file":
+            _dashboard_data = pd.read_excel(url, parse_dates=True)
+            _dashboard_data = _dashboard_data.replace(to_replace=r'^-$', value=np.nan, regex=True).infer_objects(copy=False)
         else:
             # Временно выключаем проверку сертификатов
             requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -83,7 +86,7 @@ def read_from_dashboard(url: str, data_type: str = "JSON", check_ssl: bool = Tru
             _dashboard_data = pd.DataFrame(response.json())
             # Временно выключаем проверку сертификатов
 
-            # _dashboard_data = pd.read_json(url, convert_dates=['дата', 'Дата'])
+        # _dashboard_data = pd.read_json(url, convert_dates=['дата', 'Дата'])
     except Exception as e:
         print(f"ERROR: can't read data from url {url}. {e}")
         sys.exit(1)
@@ -145,7 +148,10 @@ def convert_date(_data_frame, _columns):
     for _column_name in _columns_names:
         for _column in _columns:
             if _column.lower() in _column_name.lower():
-                _data_frame[_column_name] = pd.to_datetime(_data_frame[_column_name], format='mixed', dayfirst=True, errors='ignore')  # , format="%d.%m.%Y"
+                # Подавляет FutureWarning для PANDAS при преобразовании типа с игнорированием ошибок
+                with warnings.catch_warnings():
+                    warnings.simplefilter(action='ignore', category=FutureWarning)
+                    _data_frame[_column_name] = pd.to_datetime(_data_frame[_column_name], format='mixed', dayfirst=True, errors='ignore')  # , format="%d.%m.%Y"
             else:
                 pass
     return _data_frame
@@ -164,7 +170,9 @@ def convert_int(_data_frame, _columns):
     :return DataFrame:
     """
     for column in _columns:
-        _data_frame[column] = pd.to_numeric(_data_frame[column], errors='ignore', downcast="integer")
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='ignore', category=FutureWarning)
+            _data_frame[column] = pd.to_numeric(_data_frame[column], errors='ignore', downcast="integer")
     return _data_frame
 
 
