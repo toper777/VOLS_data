@@ -15,7 +15,7 @@ from vols_functions import *
 
 # program and version
 PROGRAM_NAME: str = "gdc_vols"
-PROGRAM_VERSION: str = "0.7.1"
+PROGRAM_VERSION: str = "0.7.2"
 
 
 def main():
@@ -43,6 +43,7 @@ def main():
     columns_digit = ['ID']
     # Наименование колонки для сортировки по возрастанию
     columns_for_sort = ['Регион/Зона мероприятия', 'Планируемая дата окончания']
+    columns_for_sort_active = ['Регион/Зона мероприятия', 'Категория программы', 'Планируемая дата окончания']
     work_branch = "Кавказский филиал"
     today_date = datetime.date.today().strftime("%Y%m%d")  # YYYYMMDD format today date
     last_days_of_month = {}
@@ -256,6 +257,8 @@ def main():
         'program': 'Программы',
         'prognoz_date': 'Прогнозная дата окончания',
         'po': 'Подрядчик по Строительству / Продаже ВОЛС',
+        'program_category': 'Категория программы',
+        'work_type': 'Тип работ',
     }
 
     rename_columns = {
@@ -630,7 +633,8 @@ def main():
     if ext_build_df is not None:
         df = pd.concat([main_build_df, ext_build_df], ignore_index=True).reset_index(drop=True)
 
-    kpi_build_df = main_build_df[main_build_df[process_columns['program']].str.match(r'.*Base Case.*')]
+    # kpi_build_df = main_build_df[main_build_df[process_columns['program']].str.match(r'.*Base Case.*')]
+    kpi_build_df = main_build_df[(main_build_df[process_columns['program_category']] == 'Доступ') | (main_build_df[process_columns['program_category']] == 'Дискреты_целевые')]
 
     build_dashboard_data = df.copy(deep=True)
     tz_build_dataframe = df[df[process_columns['tz_status']] != 'Исполнена']
@@ -852,9 +856,12 @@ def main():
     # Выборка объектов строительства по маскам
     current_month_build_dataframe = build_dashboard_data[curr_month_bool_mask & curr_status_bool_mask]
     current_month_build_dataframe = current_month_build_dataframe[[process_columns['id'],
+                                                                   process_columns['program_category'],
+                                                                   process_columns['work_type'],
                                                                    process_columns['region'],
                                                                    process_columns['name'],
                                                                    process_columns['plan_date'],
+                                                                   process_columns['prognoz_date'],
                                                                    process_columns['program'],
                                                                    process_columns['po'],
                                                                    ]]
@@ -876,9 +883,12 @@ def main():
         # Выборка объектов реконструкции по маскам
         current_month_reconstruction_dataframe = rec_df[curr_month_bool_mask & curr_status_bool_mask]
         current_month_reconstruction_dataframe = current_month_reconstruction_dataframe[[process_columns['id'],
+                                                                                         process_columns['program_category'],
+                                                                                         process_columns['work_type'],
                                                                                          process_columns['region'],
                                                                                          process_columns['name'],
                                                                                          process_columns['plan_date'],
+                                                                                         process_columns['prognoz_date'],
                                                                                          process_columns['program'],
                                                                                          process_columns['po'],
                                                                                          ]]
@@ -887,7 +897,7 @@ def main():
     # Объединяем стройку и реконструкцию
     if rec_df_ is not None:
         current_month_dataframe = pd.concat([current_month_build_dataframe, current_month_reconstruction_dataframe], ignore_index=True).reset_index(drop=True).sort_values(
-            by=columns_for_sort)
+            by=columns_for_sort_active)
     else:
         current_month_dataframe = current_month_build_dataframe
 
